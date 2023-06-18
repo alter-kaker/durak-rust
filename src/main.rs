@@ -1,21 +1,17 @@
-use macroquad::{prelude::*, window};
+mod gui;
+mod scene;
+use macroquad::prelude::*;
+use scene::Scene;
 
 #[macroquad::main("Durak")]
 async fn main() {
-    let text: &str = "Hello World";
-    let text_measurements = measure_text(text, None, 40, 1.);
-
+    let mut scene = Scene::MainMenu;
     loop {
-        clear_background(BLACK);
-
-        draw_text(
-            text,
-            (window::screen_width() - text_measurements.width) / 2.,
-            10. + text_measurements.height,
-            40.,
-            WHITE,
-        );
-
+        match scene {
+            Scene::MainMenu => scene = gui::main_menu().await,
+            Scene::Game => scene = gui::game().await,
+            Scene::GameOver => scene = gui::game_over().await,
+        }
         next_frame().await
     }
 }
