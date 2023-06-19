@@ -32,7 +32,7 @@ pub fn main_menu(scene: Scene) -> SceneFuture {
         let mut state = scene.state;
         let name = &mut state.player_name;
         loop {
-            let mut pressed = false;
+            let mut pressed = is_key_pressed(KeyCode::Enter);
             clear_background(WHITE);
             draw_text("Main Menu", 10., 10., 24., WHITE);
 
@@ -40,14 +40,15 @@ pub fn main_menu(scene: Scene) -> SceneFuture {
                 .position(vec2(10., 10.))
                 .ui(&mut root_ui(), |ui| {
                     ui.label(None, "Main Menu");
-                    ui.input_text(hash!(), "Name", name);
+                    ui.input_text(hash!("text_input_box"), "Name", name);
                     if ui.button(None, "Next") {
                         pressed = true;
                     }
                     ui.label(
                         None,
                         format!("Times Played: {}", state.times_played).as_str(),
-                    )
+                    );
+                    ui.set_input_focus(hash!("text_input_box"));
                 });
             if pressed && !name.is_empty() {
                 return Scene { func: game, state };
@@ -65,7 +66,7 @@ pub fn game(scene: Scene) -> SceneFuture {
             clear_background(WHITE);
             draw_text(&state.player_name, 10., 10., 24., WHITE);
 
-            let mut pressed = false;
+            let mut pressed = is_key_pressed(KeyCode::Enter);
             widgets::Group::new(hash!(), vec2(screen_width() - 20., screen_height() - 20.))
                 .position(vec2(10., 10.))
                 .ui(&mut root_ui(), |ui| {
@@ -99,7 +100,7 @@ pub fn game_over(scene: Scene) -> SceneFuture {
             clear_background(WHITE);
             draw_text("Game Over", 10., 10., 24., WHITE);
 
-            let mut pressed = false;
+            let mut pressed = is_key_pressed(KeyCode::Enter);
             widgets::Group::new(hash!(), vec2(screen_width() - 20., screen_height() - 20.))
                 .position(vec2(10., 10.))
                 .ui(&mut root_ui(), |ui| {
