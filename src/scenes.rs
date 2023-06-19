@@ -9,13 +9,14 @@ use macroquad::{
 
 use crate::game_state::GameState;
 
+pub type SceneFuture = Pin<Box<dyn Future<Output = Scene>>>;
 pub struct Scene {
-    func: fn(Self) -> Pin<Box<(dyn Future<Output = Scene> + 'static)>>,
+    func: fn(Self) -> SceneFuture,
     pub state: GameState,
 }
 
 impl Scene {
-    pub fn new(func: fn(Scene) -> Pin<Box<(dyn Future<Output = Scene> + 'static)>>) -> Self {
+    pub fn new(func: fn(Scene) -> SceneFuture) -> Self {
         Self {
             func,
             state: GameState::new(),
@@ -26,7 +27,7 @@ impl Scene {
     }
 }
 
-pub fn main_menu(scene: Scene) -> Pin<Box<dyn Future<Output = Scene>>> {
+pub fn main_menu(scene: Scene) -> SceneFuture {
     Box::pin(async move {
         let mut state = scene.state;
         let name = &mut state.player_name;
@@ -57,7 +58,7 @@ pub fn main_menu(scene: Scene) -> Pin<Box<dyn Future<Output = Scene>>> {
     })
 }
 
-pub fn game(scene: Scene) -> Pin<Box<dyn Future<Output = Scene>>> {
+pub fn game(scene: Scene) -> SceneFuture {
     Box::pin(async move {
         let mut state = scene.state;
         loop {
@@ -89,7 +90,7 @@ pub fn game(scene: Scene) -> Pin<Box<dyn Future<Output = Scene>>> {
     })
 }
 
-pub fn game_over(scene: Scene) -> Pin<Box<dyn Future<Output = Scene>>> {
+pub fn game_over(scene: Scene) -> SceneFuture {
     Box::pin(async move {
         let mut state = scene.state;
         state.times_played += 1;
