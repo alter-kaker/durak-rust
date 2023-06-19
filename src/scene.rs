@@ -1,6 +1,7 @@
-pub enum Scene {
-    MainMenu,
-    Game,
-    GameOver,
-}
+use crate::game_state::GameState;
 
+pub enum Scene {
+    MainMenu(GameState),
+    Game(GameState),
+    GameOver(GameState),
+}
