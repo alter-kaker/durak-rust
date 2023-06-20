@@ -10,8 +10,7 @@ use macroquad::{
 use crate::{
     deck::Deck,
     game_state::GameState,
-    hand::Hand,
-    player::{self, Player},
+    player::{Player},
 };
 
 pub type SceneFuture = Pin<Box<dyn Future<Output = Scene>>>;
