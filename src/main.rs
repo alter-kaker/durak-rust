@@ -1,21 +1,21 @@
 mod game_state;
 mod scenes;
-mod ui;
+mod resources;
 mod player;
 mod card;
 mod hand;
 mod deck;
 
 use game_state::GameState;
-use macroquad::{prelude::*, ui::root_ui};
+use macroquad::{prelude::{*, collections::storage}, ui::{root_ui, Skin}};
+use resources::{load_resources, ResourceError};
 use scenes::{main_menu, Scene};
-use ui::load_skin;
 
 
 #[macroquad::main("Durak")]
-async fn main() {
-    let skin = load_skin();
-    root_ui().push_skin(&skin);
+async fn main() -> Result<(), ResourceError>{
+    load_resources().await?;
+    root_ui().push_skin(&storage::get::<Skin>());
 
     let state = GameState::new();
     let mut scene = Scene::new(main_menu, state);

@@ -2,15 +2,15 @@ use std::{future::Future, pin::Pin};
 
 use macroquad::{
     hash,
-    prelude::*,
+    prelude::{collections::storage, *},
     text::draw_text,
     ui::{root_ui, widgets},
 };
 
 use crate::{
-    deck::Deck,
+    deck::{CardsTexture, Deck},
     game_state::GameState,
-    player::{Player},
+    player::Player,
 };
 
 pub type SceneFuture = Pin<Box<dyn Future<Output = Scene>>>;
@@ -98,7 +98,7 @@ pub fn main_menu(scene: Scene) -> SceneFuture {
 pub fn game(scene: Scene) -> SceneFuture {
     Box::pin(async move {
         let mut state = scene.state;
-        state.deck = Some(Deck::new());
+        state.deck = Some(Deck::new(&storage::get::<CardsTexture>().0));
         for player in &mut state.players {
             player.hand.cards = Vec::new();
         }
@@ -129,13 +129,12 @@ pub fn game(scene: Scene) -> SceneFuture {
             .movable(false)
             .ui(&mut root_ui(), |ui| {
                 ui.label(None, &state.players[0].name);
-                for player in &state.players {
-                    ui.label(None, &format!("{}'s cards:", player.name));
-                    for card in &player.hand.cards {
-                        ui.label(None, &format!("{:?} of {:?}", card.rank, card.suit))
-                    }
-                }
+                // for player in &state.players {
+                //     ui.label(None, &format!("{}'s cards:", player.name));
+                //     player.ha
+                // }
 
+                state.deck.as_ref().unwrap().draw(ui);
                 if ui.button(None, "Next") {
                     pressed = true;
                 }

@@ -1,8 +1,49 @@
-#[derive(PartialEq, Eq, Debug)]
+use macroquad::{
+    miniquad::native::linux_x11::libx11::Drawable,
+    prelude::{collections::storage, vec2, Rect, WHITE},
+    texture::{draw_texture_ex, DrawTextureParams, Image, Texture2D},
+    ui::{widgets::Texture, Ui},
+};
+
+use crate::deck::CardsTexture;
+
+#[derive(Debug)]
 pub struct Card {
     pub suit: Suit,
     pub rank: Rank,
+    pub texture: Texture2D,
 }
+
+impl Card {
+    pub fn new(suit: Suit, rank: Rank, image: &Image, rect: Rect) -> Self {
+        let image_data = image.get_image_data();
+        let mut texture_bytes = Vec::new();
+
+        for j in rect.y as usize..(rect.y + rect.h) as usize {
+            for i in rect.x as usize..(rect.x + rect.w) as usize {
+                for byte in image_data[i + j * image.width()] {
+                    texture_bytes.push(byte)
+                }
+            }
+        }
+
+        let texture = Texture2D::from_rgba8(rect.w as u16, rect.h as u16, &texture_bytes);
+
+        Card {
+            suit,
+            rank,
+            texture,
+        }
+    }
+}
+
+impl PartialEq for Card {
+    fn eq(&self, other: &Self) -> bool {
+        self.suit == other.suit && self.rank == other.rank
+    }
+}
+
+impl Eq for Card {}
 
 impl PartialOrd for Card {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
