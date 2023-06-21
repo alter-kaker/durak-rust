@@ -1,9 +1,4 @@
-use macroquad::{
-    prelude::Rect,
-    texture::{Image, Texture2D},
-    ui::Ui,
-};
-use rand::{thread_rng, Rng};
+use macroquad::{prelude::*, ui::Ui};
 
 use crate::card::{Card, Rank, Suit};
 
@@ -70,7 +65,7 @@ impl Deck {
 fn shuffle(cards: &mut Vec<Card>) {
     let len = cards.len();
     for i in 0..len {
-        let r = i + thread_rng().gen_range(0..len - i);
+        let r = i + rand::gen_range(0, len - i);
         cards.swap(i, r);
     }
 }

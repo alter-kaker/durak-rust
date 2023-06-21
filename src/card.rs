@@ -1,11 +1,7 @@
 use macroquad::{
-    miniquad::native::linux_x11::libx11::Drawable,
-    prelude::{collections::storage, vec2, Rect, WHITE},
-    texture::{draw_texture_ex, DrawTextureParams, Image, Texture2D},
-    ui::{widgets::Texture, Ui},
+    prelude::*,
 };
 
-use crate::deck::CardsTexture;
 
 #[derive(Debug)]
 pub struct Card {
