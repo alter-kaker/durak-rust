@@ -17,7 +17,7 @@ pub struct Game {
     assets: Assets,
     card: Option<Card>,
     card_loc: (i16, i16),
-    card_velocity: (i16, i16),
+    card_velocity: (f32, f32),
 }
 
 impl Game {
@@ -32,7 +32,7 @@ impl Game {
             assets,
             card,
             card_loc: (24, 16),
-            card_velocity: (1, 1),
+            card_velocity: (60., 60.),
         };
 
         Ok(game)
@@ -127,14 +127,14 @@ impl Game {
         self.card = Some(Card { rank, suit });
 
         if self.card_loc.0 <= 0 || self.card_loc.0 + 71 >= self.ctx.screen_dimensions().0 as i16 {
-            self.card_velocity.0 *= -1;
+            self.card_velocity.0 *= -1.;
         }
         if self.card_loc.1 <= 0 || self.card_loc.1 + 96 >= self.ctx.screen_dimensions().1 as i16 {
-            self.card_velocity.1 *= -1;
+            self.card_velocity.1 *= -1.;
         }
 
-        self.card_loc.0 += self.card_velocity.0;
-        self.card_loc.1 += self.card_velocity.1;
+        self.card_loc.0 += (self.card_velocity.0 * self.ctx.timer.dt().as_secs_f32()) as i16;
+        self.card_loc.1 += (self.card_velocity.1 * self.ctx.timer.dt().as_secs_f32()) as i16;
     }
     fn keyboard_input(&mut self, key: Option<VirtualKeyCode>) {
         if let Some(VirtualKeyCode::Escape) = key {

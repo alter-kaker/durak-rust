@@ -7,8 +7,8 @@ use winit::{
 
 use crate::{game_error::GameError, timer::Timer};
 
-const WIDTH: u32 = 320;
-const HEIGHT: u32 = 240;
+const WIDTH: u32 = 640;
+const HEIGHT: u32 = 480;
 
 pub struct Context {
     pub timer: Timer,
