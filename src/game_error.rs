@@ -1,6 +1,6 @@
-use std::fmt::Display;
+use std::{fmt::Display, io};
 
-use pixels::Error;
+use png::DecodingError;
 use winit::error::OsError;
 
 #[derive(Debug)]
@@ -14,14 +14,26 @@ impl Display for GameError {
     }
 }
 
-impl From<Error> for GameError {
-    fn from(value: Error) -> Self {
+impl From<io::Error> for GameError {
+    fn from(value: io::Error) -> Self {
+        GameError(format!("{}", value))
+    }
+}
+
+impl From<pixels::Error> for GameError {
+    fn from(value: pixels::Error) -> Self {
         GameError(format!("{}", value))
     }
 }
 
 impl From<OsError> for GameError {
     fn from(value: OsError) -> Self {
+        GameError(format!("{}", value))
+    }
+}
+
+impl From<DecodingError> for GameError {
+    fn from(value: DecodingError) -> Self {
         GameError(format!("{}", value))
     }
 }

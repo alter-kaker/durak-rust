@@ -46,4 +46,8 @@ impl Context {
             event_loop,
         ))
     }
+
+    pub fn screen_dimensions(&self) -> (u32, u32) {
+        (WIDTH, HEIGHT)
+    }
 }

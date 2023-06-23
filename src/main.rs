@@ -2,6 +2,9 @@ mod context;
 mod game;
 mod game_error;
 mod timer;
+mod assets;
+mod sprite;
+mod card;
 
 use context::Context;
 use game::Game;
