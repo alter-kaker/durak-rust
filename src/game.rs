@@ -7,7 +7,7 @@ use crate::{
     assets::{load_assets, Assets},
     card::{Card, Rank, Suit},
     context::Context,
-    game_error::GameError
+    game_error::GameError,
 };
 
 pub struct Game {
@@ -15,16 +15,15 @@ pub struct Game {
     frame: u32,
     fps: f32,
     assets: Assets,
-    card: Card,
+    card: Option<Card>,
+    card_loc: (i16, i16),
+    card_velocity: (i16, i16),
 }
 
 impl Game {
     pub fn new(ctx: Context) -> Result<Self, GameError> {
         let assets = load_assets()?;
-        let card = Card {
-            suit: Suit::Spades,
-            rank: Rank::Queen,
-        };
+        let card = None;
 
         let game = Game {
             ctx,
@@ -32,6 +31,8 @@ impl Game {
             fps: 0.,
             assets,
             card,
+            card_loc: (24, 16),
+            card_velocity: (1, 1),
         };
 
         Ok(game)
@@ -75,29 +76,36 @@ impl Game {
 
     fn draw(&mut self) {
         let (screen_w, _screen_h) = self.ctx.screen_dimensions();
-        let card_sprite = self.assets.sprites().get(&self.card).unwrap();
-        let frame = self.ctx.pixels.frame_mut();
-        let mut p = 0;
-        for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-            let x = (i % screen_w as usize) as i16;
-            let y = (i / screen_w as usize) as i16;
+        if let Some(card) = self.card.as_ref() {
+            if let Some(card_sprite) = self.assets.sprites().get(card) {
+                let frame = self.ctx.pixels.frame_mut();
+                let mut p = 0;
+                let (card_x, card_y) = self.card_loc;
+                for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
+                    let x = (i % screen_w as usize) as i16;
+                    let y = (i / screen_w as usize) as i16;
 
-            let inside_the_box = x >= 0 && x < card_sprite.w as i16 && y >= 0 && y < card_sprite.h as i16;
+                    let inside_the_box = x >= card_x
+                        && x < card_x + card_sprite.w as i16
+                        && y >= card_y
+                        && y < card_y + card_sprite.h as i16;
 
-            let rgba = if inside_the_box {
-                // [0x5e, 0x48, 0xe8, 0xff]
-                p += 4;
-                [
-                    card_sprite.pixels[p - 4],
-                    card_sprite.pixels[p - 3],
-                    card_sprite.pixels[p - 2],
-                    card_sprite.pixels[p - 1],
-                ]
-            } else {
-                [0x48, 0xb2, 0xe8, 0xff]
-            };
+                    let rgba = if inside_the_box {
+                        // [0x5e, 0x48, 0xe8, 0xff]
+                        p += 4;
+                        [
+                            card_sprite.pixels[p - 4],
+                            card_sprite.pixels[p - 3],
+                            card_sprite.pixels[p - 2],
+                            card_sprite.pixels[p - 1],
+                        ]
+                    } else {
+                        [0x48, 0xb2, 0xe8, 0xff]
+                    };
 
-            pixel.copy_from_slice(&rgba);
+                    pixel.copy_from_slice(&rgba);
+                }
+            }
         }
     }
     fn update(&mut self) {
@@ -109,7 +117,24 @@ impl Game {
             self.ctx.timer.dt().as_millis(),
             self.ctx.timer.runtime().as_millis(),
             self.fps
-        )
+        );
+
+        let card_no = self.ctx.timer.runtime().as_secs() % (4 * 9);
+
+        let rank: Rank = (card_no as usize % 9).into();
+        let suit: Suit = (card_no as usize / 9).into();
+
+        self.card = Some(Card { rank, suit });
+
+        if self.card_loc.0 <= 0 || self.card_loc.0 + 71 >= self.ctx.screen_dimensions().0 as i16 {
+            self.card_velocity.0 *= -1;
+        }
+        if self.card_loc.1 <= 0 || self.card_loc.1 + 96 >= self.ctx.screen_dimensions().1 as i16 {
+            self.card_velocity.1 *= -1;
+        }
+
+        self.card_loc.0 += self.card_velocity.0;
+        self.card_loc.1 += self.card_velocity.1;
     }
     fn keyboard_input(&mut self, key: Option<VirtualKeyCode>) {
         if let Some(VirtualKeyCode::Escape) = key {
