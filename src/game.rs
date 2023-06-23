@@ -32,7 +32,7 @@ impl Game {
             assets,
             card,
             card_loc: (24, 16),
-            card_velocity: (60., 60.),
+            card_velocity: (160., 160.),
         };
 
         Ok(game)
@@ -135,6 +135,15 @@ impl Game {
 
         self.card_loc.0 += (self.card_velocity.0 * self.ctx.timer.dt().as_secs_f32()) as i16;
         self.card_loc.1 += (self.card_velocity.1 * self.ctx.timer.dt().as_secs_f32()) as i16;
+
+        self.card_loc.0 = self
+            .card_loc
+            .0
+            .clamp(0, (self.ctx.screen_dimensions().0 - 71) as i16);
+        self.card_loc.1 = self
+            .card_loc
+            .1
+            .clamp(0, (self.ctx.screen_dimensions().1 - 96) as i16);
     }
     fn keyboard_input(&mut self, key: Option<VirtualKeyCode>) {
         if let Some(VirtualKeyCode::Escape) = key {
