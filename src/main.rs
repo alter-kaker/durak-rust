@@ -1,17 +1,5 @@
-mod context;
-mod game;
-mod game_error;
-mod timer;
-mod assets;
-mod sprite;
-mod card;
-
-use context::Context;
-use game::Game;
-use game_error::GameError;
+use durak_rust::prelude::*;
 
 fn main() -> Result<(), GameError> {
-    let (ctx, event_loop) = Context::build()?;
-    let game = Game::new(ctx)?;
-    game.run(event_loop)
+    pollster::block_on(durak_rust::run())
 }

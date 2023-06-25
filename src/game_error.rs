@@ -6,6 +6,12 @@ use winit::error::OsError;
 #[derive(Debug)]
 pub struct GameError(pub String);
 
+impl GameError {
+    pub fn new(msg: &str) -> Self {
+        GameError(msg.to_string())
+    }
+}
+
 impl std::error::Error for GameError {}
 
 impl Display for GameError {
@@ -14,14 +20,20 @@ impl Display for GameError {
     }
 }
 
-impl From<io::Error> for GameError {
-    fn from(value: io::Error) -> Self {
+impl From<wgpu::CreateSurfaceError> for GameError {
+    fn from(value: wgpu::CreateSurfaceError) -> Self {
         GameError(format!("{}", value))
     }
 }
 
-impl From<pixels::Error> for GameError {
-    fn from(value: pixels::Error) -> Self {
+impl From<wgpu::RequestDeviceError> for GameError {
+    fn from(value: wgpu::RequestDeviceError) -> Self {
+        GameError(format!("{}", value))
+    }
+}
+
+impl From<io::Error> for GameError {
+    fn from(value: io::Error) -> Self {
         GameError(format!("{}", value))
     }
 }
