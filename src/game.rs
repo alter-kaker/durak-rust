@@ -1,3 +1,4 @@
+use wgpu::{SurfaceError, TextureViewDescriptor};
 use winit::{
     event::{Event, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
@@ -72,7 +73,14 @@ impl Game {
         );
     }
 
-    fn draw(&mut self) {}
+    fn draw(&mut self) {
+        match self.ctx.render() {
+            Ok(_) => {},
+            Err(SurfaceError::Lost) => self.ctx.reconfigure(),
+            Err(SurfaceError::OutOfMemory) => self.ctx.quit = true,
+            Err(e) => eprint!("{:?}", e),
+        }
+    }
     fn update(&mut self) {
         self.frame += 1;
         self.fps = self.frame as f32 / self.ctx.timer.runtime().as_secs_f32();
