@@ -1,5 +1,6 @@
-use wgpu::{SurfaceError, TextureViewDescriptor};
+use wgpu::{Color, SurfaceError};
 use winit::{
+    dpi::PhysicalPosition,
     event::{Event, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
 };
@@ -20,6 +21,8 @@ pub struct Game {
     assets: Assets,
     cards: Vec<(Card, (i16, i16))>,
     card_velocity: (f32, f32),
+    mouse_pos: (u32, u32),
+    screen_color: Color,
 }
 
 impl Game {
@@ -36,6 +39,13 @@ impl Game {
             card_timer: 0.,
             card_no: 0,
             card_velocity: (5., 5.),
+            mouse_pos: (0, 0),
+            screen_color: Color {
+                r: 0.1,
+                g: 0.2,
+                b: 0.3,
+                a: 1.0,
+            },
         };
 
         Ok(game)
@@ -65,6 +75,7 @@ impl Game {
                             self.keyboard_input(input.virtual_keycode)
                         }
                         WindowEvent::CloseRequested => control_flow.set_exit(),
+                        WindowEvent::CursorMoved { position, .. } => self.cursor_moved(position),
                         _ => (),
                     },
                     _ => (),
@@ -74,8 +85,8 @@ impl Game {
     }
 
     fn draw(&mut self) {
-        match self.ctx.render() {
-            Ok(_) => {},
+        match self.ctx.clear_screen(self.screen_color) {
+            Ok(_) => {}
             Err(SurfaceError::Lost) => self.ctx.reconfigure(),
             Err(SurfaceError::OutOfMemory) => self.ctx.quit = true,
             Err(e) => eprint!("{:?}", e),
@@ -92,6 +103,11 @@ impl Game {
             self.ctx.timer.runtime().as_millis(),
             self.fps
         );
+
+        let g = self.mouse_pos.0 as f64 / self.ctx.size().width as f64;
+        let b = self.mouse_pos.1 as f64 / self.ctx.size().height as f64;
+        let r = 0.1;
+        self.screen_color = Color { r, g, b, a: 1.0 };
 
         self.card_timer = 0.;
         self.card_no += 1;
@@ -122,5 +138,9 @@ impl Game {
         if let Some(VirtualKeyCode::Escape) = key {
             self.ctx.quit = true;
         }
+    }
+
+    fn cursor_moved(&mut self, pos: PhysicalPosition<f64>) {
+        self.mouse_pos = (pos.x as u32, pos.y as u32);
     }
 }
