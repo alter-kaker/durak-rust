@@ -8,7 +8,7 @@ mod scenes;
 
 use std::{env, path};
 
-use game_state::GameState;
+use game_state::Game;
 use ggez::{event, ContextBuilder, GameResult};
 
 fn main() -> GameResult {
@@ -22,7 +22,7 @@ fn main() -> GameResult {
 
     let cb = ContextBuilder::new("durak_rust", "alter_kaker").add_resource_path(resource_dir);
     let (mut ctx, event_loop) = cb.build()?;
-    let state = GameState::new(&mut ctx)?;
+    let state = Game::new(&mut ctx)?;
 
     event::run(ctx, event_loop, state)
 }

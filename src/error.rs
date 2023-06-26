@@ -8,3 +8,8 @@ impl From<GameError> for DurakError {
         DurakError(format!("{:?}", value))
     }
 }
+impl From<DurakError> for GameError {
+    fn from(value: DurakError) -> Self {
+        GameError::CustomError(format!("{:?}", value))
+    }
+}

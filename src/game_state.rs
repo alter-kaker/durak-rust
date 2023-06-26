@@ -5,24 +5,18 @@ use crate::{
     error::DurakError,
     hand::Hand,
     player::Player,
-    scenes::{main_menu, main_menu_draw, Scene},
+    scenes::{MainMenu, Scene},
 };
 
 pub struct GameState {
     pub times_played: u32,
     pub players: Vec<Player>,
     pub deck: Option<Deck>,
-    pub scene: Scene,
     pub frames: usize,
 }
 
 impl GameState {
-    pub fn new(ctx: &mut Context) -> GameResult<Self> {
-        ctx.gfx
-            .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
-
-        let scene = Scene::new(main_menu, main_menu_draw);
-
+    pub fn new() -> Result<Self, DurakError> {
         Ok(GameState {
             times_played: 0,
             players: vec![
@@ -38,18 +32,39 @@ impl GameState {
                 },
             ],
             deck: None,
-            scene,
             frames: 0,
         })
     }
 }
 
-impl EventHandler<DurakError> for GameState {
+pub struct Game {
+    pub scene: Box<dyn Scene>,
+    pub state: GameState,
+}
+
+impl Game {
+    pub fn new(ctx: &mut Context) -> GameResult<Self> {
+        ctx.gfx
+            .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
+
+        let scene = Box::new(MainMenu {});
+
+        Ok(Game {
+            state: GameState::new()?,
+            scene,
+        })
+    }
+}
+
+impl EventHandler<DurakError> for Game {
     fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        (self.scene.update())(self, ctx)
+        if let Some(scene) = self.scene.update(&mut self.state, ctx)? {
+            self.scene = scene
+        }
+        Ok(())
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        (self.scene.draw())(self, ctx)
+        self.scene.draw(&self.state, ctx)
     }
 }
