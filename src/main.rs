@@ -1,26 +1,28 @@
-mod game_state;
-mod scenes;
-mod resources;
-mod player;
 mod card;
-mod hand;
 mod deck;
+mod error;
+mod game_state;
+mod hand;
+mod player;
+mod scenes;
+
+use std::{env, path};
 
 use game_state::GameState;
-use macroquad::{prelude::{*, collections::storage}, ui::{root_ui, Skin}};
-use resources::{load_resources, ResourceError};
-use scenes::{main_menu, Scene};
+use ggez::{event, ContextBuilder, GameResult};
 
+fn main() -> GameResult {
+    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+        let mut path = path::PathBuf::from(manifest_dir);
+        path.push("resources");
+        path
+    } else {
+        path::PathBuf::from("./resources")
+    };
 
-#[macroquad::main("Durak")]
-async fn main() -> Result<(), ResourceError>{
-    load_resources().await?;
-    root_ui().push_skin(&storage::get::<Skin>());
+    let cb = ContextBuilder::new("durak_rust", "alter_kaker").add_resource_path(resource_dir);
+    let (mut ctx, event_loop) = cb.build()?;
+    let state = GameState::new(&mut ctx)?;
 
-    let state = GameState::new();
-    let mut scene = Scene::new(main_menu, state);
-    loop {
-        scene = scene.update().await;
-        next_frame().await
-    }
+    event::run(ctx, event_loop, state)
 }

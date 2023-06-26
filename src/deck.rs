@@ -1,9 +1,6 @@
-use macroquad::{prelude::*, ui::Ui};
+use rand::{thread_rng, Rng};
 
 use crate::card::{Card, Rank, Suit};
-
-#[derive(Debug)]
-pub struct CardsTexture(pub Image);
 
 pub struct Deck {
     cards: Vec<Card>,
@@ -11,7 +8,7 @@ pub struct Deck {
 }
 
 impl Deck {
-    pub fn new(cards_image: &Image) -> Self {
+    pub fn new() -> Self {
         let mut cards: Vec<Card> = [Suit::Hearts, Suit::Spades, Suit::Diamonds, Suit::Clubs]
             .into_iter()
             .enumerate()
@@ -30,12 +27,7 @@ impl Deck {
                             13 => Rank::King,
                             _ => Rank::Ace,
                         };
-                        let w = 71;
-                        let h = 96;
-                        let x = j * w;
-                        let y = i * h;
-                        let rect = Rect::new(x as f32, y as f32, w as f32, h as f32);
-                        Card::new(suit, rank, cards_image, rect)
+                        Card::new(suit, rank)
                     })
                 }
             })
@@ -44,7 +36,7 @@ impl Deck {
         shuffle(&mut cards);
 
         Deck {
-            kozyr: cards[0].suit.clone(),
+            kozyr: cards[0].suit(),
             cards,
         }
     }
@@ -52,20 +44,12 @@ impl Deck {
     pub fn pop(&mut self) -> Option<Card> {
         self.cards.pop()
     }
-
-    pub fn draw(&self, ui: &mut Ui) {
-        for (i, card) in self.cards.iter().enumerate() {
-            if ui.texture(card.texture, card.texture.width(), card.texture.height()) {
-                println!("card clicked");
-            }
-        }
-    }
 }
 
 fn shuffle(cards: &mut Vec<Card>) {
     let len = cards.len();
     for i in 0..len {
-        let r = i + rand::gen_range(0, len - i);
+        let r = i + thread_rng().gen_range(0..(len - i));
         cards.swap(i, r);
     }
 }

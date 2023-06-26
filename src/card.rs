@@ -1,35 +1,20 @@
-use macroquad::{
-    prelude::*,
-};
-
-
 #[derive(Debug)]
 pub struct Card {
-    pub suit: Suit,
-    pub rank: Rank,
-    pub texture: Texture2D,
+    suit: Suit,
+    rank: Rank,
 }
 
 impl Card {
-    pub fn new(suit: Suit, rank: Rank, image: &Image, rect: Rect) -> Self {
-        let image_data = image.get_image_data();
-        let mut texture_bytes = Vec::new();
+    pub fn new(suit: Suit, rank: Rank) -> Self {
+        Card { suit, rank }
+    }
 
-        for j in rect.y as usize..(rect.y + rect.h) as usize {
-            for i in rect.x as usize..(rect.x + rect.w) as usize {
-                for byte in image_data[i + j * image.width()] {
-                    texture_bytes.push(byte)
-                }
-            }
-        }
+    pub fn suit(&self) -> Suit {
+        self.suit
+    }
 
-        let texture = Texture2D::from_rgba8(rect.w as u16, rect.h as u16, &texture_bytes);
-
-        Card {
-            suit,
-            rank,
-            texture,
-        }
+    pub fn rank(&self) -> Rank {
+        self.rank
     }
 }
 
@@ -51,7 +36,7 @@ impl PartialOrd for Card {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Suit {
     Hearts,
     Diamonds,
@@ -59,7 +44,7 @@ pub enum Suit {
     Clubs,
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
 pub enum Rank {
     Six = 6,
     Seven = 7,
