@@ -4,6 +4,43 @@ use ggez::{
     Context,
 };
 
+pub enum Scene {
+    MainMenu(MainMenu),
+    GamePlay(GamePlay),
+    GameOver(GameOver),
+}
+
+impl Scene {
+    pub fn update(
+        &self,
+        state: &mut GameState,
+        ctx: &Context,
+    ) -> Result<Option<ToScene>, DurakError> {
+        match self {
+            Scene::MainMenu(scene) => scene.update(state, ctx),
+            Scene::GamePlay(scene) => scene.update(state, ctx),
+            Scene::GameOver(scene) => scene.update(state, ctx),
+        }
+    }
+
+    pub fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
+        match self {
+            Scene::MainMenu(scene) => scene.draw(state, ctx),
+            Scene::GamePlay(scene) => scene.draw(state, ctx),
+            Scene::GameOver(scene) => scene.draw(state, ctx),
+        }
+    }
+
+    pub fn to(&self, to_scene: ToScene) -> Option<Self> {
+        match (self, to_scene) {
+            (Scene::MainMenu(scene), ToScene::GamePlay) => Some(Scene::GamePlay(GamePlay {})),
+            (Scene::GamePlay(scene), ToScene::GameOver) => Some(Scene::GameOver(GameOver {})),
+            (Scene::GameOver(scene), ToScene::MainMenu) => Some(Scene::MainMenu(scene.into())),
+            _ => None,
+        }
+    }
+}
+
 pub enum ToScene {
     MainMenu,
     GamePlay,
@@ -14,17 +51,9 @@ use crate::{error::DurakError, game_state::GameState};
 
 pub type SceneResult = Result<Option<ToScene>, DurakError>;
 
-pub trait Scene {
-    fn new() -> Self;
-    fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult;
-    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError>;
-}
-
 pub struct MainMenu {}
 
-impl Scene for MainMenu {
-    // type T = Self;
-
+impl MainMenu {
     fn new() -> Self {
         Self {}
     }
@@ -60,15 +89,15 @@ impl Scene for MainMenu {
     }
 }
 
+impl From<&GameOver> for MainMenu {
+    fn from(_value: &GameOver) -> Self {
+        MainMenu {}
+    }
+}
+
 pub struct GamePlay {}
 
-impl Scene for GamePlay {
-    // type T = Self;
-
-    fn new() -> Self {
-        Self {}
-    }
-
+impl GamePlay {
     fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult {
         state.frames += 1;
         Ok(None)
@@ -93,20 +122,26 @@ impl Scene for GamePlay {
     }
 }
 
+impl From<&MainMenu> for GamePlay {
+    fn from(_value: &MainMenu) -> Self {
+        GamePlay {}
+    }
+}
+
 pub struct GameOver {}
 
-impl Scene for GameOver {
-    // type T = Self;
-
-    fn new() -> Self {
-        Self {}
-    }
-
+impl GameOver {
     fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult {
         todo!()
     }
 
     fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
         todo!()
+    }
+}
+
+impl From<&GamePlay> for GameOver {
+    fn from(_value: &GamePlay) -> Self {
+        GameOver {}
     }
 }
