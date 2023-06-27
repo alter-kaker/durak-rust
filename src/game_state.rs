@@ -5,8 +5,51 @@ use crate::{
     error::DurakError,
     hand::Hand,
     player::Player,
-    scenes::{MainMenu, Scene},
+    scenes::{GameOver, GamePlay, MainMenu, Scene, ToScene},
 };
+
+pub enum SceneWrapper {
+    MainMenu(MainMenu),
+    GamePlay(GamePlay),
+    GameOver(GameOver),
+}
+
+impl SceneWrapper {
+    pub fn update(
+        &self,
+        state: &mut GameState,
+        ctx: &Context,
+    ) -> Result<Option<ToScene>, DurakError> {
+        match self {
+            SceneWrapper::MainMenu(scene) => scene.update(state, ctx),
+            SceneWrapper::GamePlay(scene) => scene.update(state, ctx),
+            SceneWrapper::GameOver(scene) => scene.update(state, ctx),
+        }
+    }
+
+    pub fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
+        match self {
+            SceneWrapper::MainMenu(scene) => scene.draw(state, ctx),
+            SceneWrapper::GamePlay(scene) => scene.draw(state, ctx),
+            SceneWrapper::GameOver(scene) => scene.draw(state, ctx),
+        }
+    }
+
+    pub fn to(&self, to_scene: ToScene) -> Option<Self> {
+        match (self, to_scene) {
+            (SceneWrapper::MainMenu(_), ToScene::GamePlay) => {
+                Some(SceneWrapper::GamePlay(GamePlay {}))
+            }
+            (SceneWrapper::GamePlay(_), ToScene::GameOver) => {
+                Some(SceneWrapper::GameOver(GameOver {}))
+            }
+            (SceneWrapper::GameOver(_), ToScene::MainMenu) => {
+                Some(SceneWrapper::MainMenu(MainMenu {}))
+            }
+            _ => None,
+        }
+    }
+}
 
 pub struct GameState {
     pub times_played: u32,
@@ -17,7 +60,7 @@ pub struct GameState {
 
 impl GameState {
     pub fn new() -> Result<Self, DurakError> {
-        Ok(GameState {
+        Ok(Self {
             times_played: 0,
             players: vec![
                 Player {
@@ -37,8 +80,11 @@ impl GameState {
     }
 }
 
+// impl From<GameState<GamePlay>> for GameState<GameOver> {}
+// impl From<GameState<GameOver>> for GameState<MainMenu> {}
+
 pub struct Game {
-    pub scene: Box<dyn Scene>,
+    pub scene: SceneWrapper,
     pub state: GameState,
 }
 
@@ -47,20 +93,23 @@ impl Game {
         ctx.gfx
             .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
 
-        let scene = Box::new(MainMenu {});
+        let scene = MainMenu {};
 
         Ok(Game {
+            scene: SceneWrapper::MainMenu(MainMenu {}),
             state: GameState::new()?,
-            scene,
         })
     }
 }
 
 impl EventHandler<DurakError> for Game {
     fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        if let Some(scene) = self.scene.update(&mut self.state, ctx)? {
-            self.scene = scene
+        if let Some(to_scene) = self.scene.update(&mut self.state, ctx)? {
+            if let Some(scene) = self.scene.to(to_scene) {
+                self.scene = scene;
+            }
         }
+
         Ok(())
     }
 

@@ -4,11 +4,18 @@ use ggez::{
     Context,
 };
 
+pub enum ToScene {
+    MainMenu,
+    GamePlay,
+    GameOver,
+}
+
 use crate::{error::DurakError, game_state::GameState};
 
-pub type SceneResult = Result<Option<Box<dyn Scene>>, DurakError>;
+pub type SceneResult = Result<Option<ToScene>, DurakError>;
 
 pub trait Scene {
+    fn new() -> Self;
     fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult;
     fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError>;
 }
@@ -16,14 +23,16 @@ pub trait Scene {
 pub struct MainMenu {}
 
 impl Scene for MainMenu {
-    fn update(
-        &self,
-        state: &mut GameState,
-        _ctx: &Context,
-    ) -> Result<Option<Box<dyn Scene>>, DurakError> {
+    // type T = Self;
+
+    fn new() -> Self {
+        Self {}
+    }
+
+    fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult {
         state.frames += 1;
         if state.frames > 100 {
-            return Ok(Some(Box::new(GamePlay {})));
+            return Ok(Some(ToScene::GamePlay));
         }
         Ok(None)
     }
@@ -51,9 +60,15 @@ impl Scene for MainMenu {
     }
 }
 
-struct GamePlay {}
+pub struct GamePlay {}
 
 impl Scene for GamePlay {
+    // type T = Self;
+
+    fn new() -> Self {
+        Self {}
+    }
+
     fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult {
         state.frames += 1;
         Ok(None)
@@ -75,5 +90,23 @@ impl Scene for GamePlay {
         canvas.finish(ctx)?;
 
         Ok(())
+    }
+}
+
+pub struct GameOver {}
+
+impl Scene for GameOver {
+    // type T = Self;
+
+    fn new() -> Self {
+        Self {}
+    }
+
+    fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult {
+        todo!()
+    }
+
+    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
+        todo!()
     }
 }
