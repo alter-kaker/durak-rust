@@ -8,7 +8,7 @@ use crate::{
     error::DurakError,
     hand::Hand,
     player::Player,
-    scenes::{MainMenu, Scene, SceneError, SceneWrapper},
+    scenes::{SceneError, SceneWrapper, Scene}, game_scenes::MainMenu,
 };
 
 pub struct GameState {
