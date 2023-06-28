@@ -4,15 +4,15 @@ use ggez::{
     Context,
 };
 
-pub struct SceneWrapper {
-    scene: Box<dyn Scene>,
+pub struct SceneWrapper<T> {
+    scene: Box<dyn Scene<T>>,
 }
 
-impl SceneWrapper {
-    pub fn new(scene: Box<dyn Scene>) -> Self {
+impl<T> SceneWrapper<T> {
+    pub fn new(scene: Box<dyn Scene<T>>) -> Self {
         SceneWrapper { scene }
     }
-    pub fn update(&mut self, state: &mut GameState, ctx: &Context) -> Result<(), DurakError> {
+    pub fn update(&mut self, state: &mut T, ctx: &Context) -> Result<(), DurakError> {
         if let Some(new_scene) = self.scene.update(state, ctx)? {
             self.scene = new_scene;
         }
@@ -26,34 +26,26 @@ impl SceneWrapper {
 
 use crate::{error::DurakError, game_state::GameState};
 
-pub trait SceneTransition<T> {
-    fn to(value: T) -> bool;
-}
-
-pub trait Scene {
+pub trait Scene<T> {
     fn update(
         &self,
-        state: &mut GameState,
+        state: &mut T,
         _ctx: &Context,
-    ) -> Result<Option<Box<dyn Scene>>, DurakError>;
+    ) -> Result<Option<Box<dyn Scene<T>>>, DurakError>;
     fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError>;
     fn new_boxed() -> Box<Self>
     where
         Self: Sized;
 }
 
-pub trait NewBoxed {
-    fn new_boxed() -> Box<Self>;
-}
-
 pub struct MainMenu {}
 
-impl Scene for MainMenu {
+impl Scene<GameState> for MainMenu {
     fn update(
         &self,
         state: &mut GameState,
         _ctx: &Context,
-    ) -> Result<Option<Box<dyn Scene>>, DurakError> {
+    ) -> Result<Option<Box<dyn Scene<GameState>>>, DurakError> {
         state.frames += 1;
         if state.frames > 100 {
             return Ok(Some(Box::new(GamePlay::from(self))));
@@ -98,12 +90,12 @@ impl From<&GameOver> for MainMenu {
 }
 pub struct GamePlay {}
 
-impl Scene for GamePlay {
+impl Scene<GameState> for GamePlay {
     fn update(
         &self,
         state: &mut GameState,
         _ctx: &Context,
-    ) -> Result<Option<Box<dyn Scene>>, DurakError> {
+    ) -> Result<Option<Box<dyn Scene<GameState>>>, DurakError> {
         state.frames += 1;
         Ok(None)
     }
@@ -142,16 +134,16 @@ impl From<&MainMenu> for GamePlay {
 
 pub struct GameOver {}
 
-impl Scene for GameOver {
+impl Scene<GameState> for GameOver {
     fn update(
         &self,
-        state: &mut GameState,
+        _state: &mut GameState,
         _ctx: &Context,
-    ) -> Result<Option<Box<dyn Scene>>, DurakError> {
+    ) -> Result<Option<Box<dyn Scene<GameState>>>, DurakError> {
         todo!()
     }
 
-    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
+    fn draw(&self, _state: &GameState, _ctx: &mut Context) -> Result<(), DurakError> {
         todo!()
     }
 

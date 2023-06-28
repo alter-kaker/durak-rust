@@ -38,7 +38,7 @@ impl GameState {
 }
 
 pub struct Game {
-    pub scene: SceneWrapper,
+    pub scene: SceneWrapper<GameState>,
     pub state: GameState,
 }
 
