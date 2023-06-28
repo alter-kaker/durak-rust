@@ -64,6 +64,6 @@ impl EventHandler<DurakError> for Game {
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        self.scene.draw(&mut self.state, ctx)
+        self.scene.draw(&self.state, ctx)
     }
 }

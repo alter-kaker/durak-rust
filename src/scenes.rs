@@ -20,7 +20,7 @@ impl<T> SceneWrapper<T> {
         Ok(())
     }
 
-    pub fn draw(&self, state: &mut GameState, ctx: &mut Context) -> Result<(), DurakError> {
+    pub fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
         self.scene.draw(state, ctx)
     }
 }
@@ -33,7 +33,7 @@ pub trait Scene<T> {
         state: &mut T,
         _ctx: &mut Context,
     ) -> Result<Option<Box<dyn Scene<T>>>, DurakError>;
-    fn draw(&self, state: &mut GameState, ctx: &mut Context) -> Result<(), DurakError>;
+    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError>;
     fn new_boxed() -> Box<Self>
     where
         Self: Sized;
@@ -58,7 +58,7 @@ impl Scene<GameState> for MainMenu {
         Ok(result)
     }
 
-    fn draw(&self, state: &mut GameState, ctx: &mut Context) -> Result<(), DurakError> {
+    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
 
         // Text is drawn from the top-left corner.
@@ -107,7 +107,7 @@ impl Scene<GameState> for GamePlay {
         Ok(None)
     }
 
-    fn draw(&self, state: &mut GameState, ctx: &mut Context) -> Result<(), DurakError> {
+    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
 
         // Text is drawn from the top-left corner.
@@ -150,7 +150,7 @@ impl Scene<GameState> for GameOver {
         todo!()
     }
 
-    fn draw(&self, _state: &mut GameState, _ctx: &mut Context) -> Result<(), DurakError> {
+    fn draw(&self, _state: &GameState, _ctx: &mut Context) -> Result<(), DurakError> {
         todo!()
     }
 
