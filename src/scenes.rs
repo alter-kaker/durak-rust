@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use ggez::{
     glam::Vec2,
     graphics::{Canvas, Color, Text},
