@@ -1,67 +1,64 @@
+use std::any::Any;
+
 use ggez::{
     glam::Vec2,
     graphics::{Canvas, Color, Text},
     Context,
 };
 
-pub enum Scene {
-    MainMenu(MainMenu),
-    GamePlay(GamePlay),
-    GameOver(GameOver),
+pub struct SceneWrapper {
+    scene: Box<dyn Scene>,
 }
 
-impl Scene {
-    pub fn update(
-        &self,
-        state: &mut GameState,
-        ctx: &Context,
-    ) -> Result<Option<ToScene>, DurakError> {
-        match self {
-            Scene::MainMenu(scene) => scene.update(state, ctx),
-            Scene::GamePlay(scene) => scene.update(state, ctx),
-            Scene::GameOver(scene) => scene.update(state, ctx),
+impl SceneWrapper {
+    pub fn new(scene: Box<dyn Scene>) -> Self {
+        SceneWrapper { scene }
+    }
+    pub fn update(&mut self, state: &mut GameState, ctx: &Context) -> Result<(), DurakError> {
+        if let Some(new_scene) = self.scene.update(state, ctx)? {
+            self.scene = new_scene;
         }
+        Ok(())
     }
 
     pub fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
-        match self {
-            Scene::MainMenu(scene) => scene.draw(state, ctx),
-            Scene::GamePlay(scene) => scene.draw(state, ctx),
-            Scene::GameOver(scene) => scene.draw(state, ctx),
-        }
+        self.scene.draw(state, ctx)
     }
-
-    pub fn to(&self, to_scene: ToScene) -> Option<Self> {
-        match (self, to_scene) {
-            (Scene::MainMenu(scene), ToScene::GamePlay) => Some(Scene::GamePlay(GamePlay {})),
-            (Scene::GamePlay(scene), ToScene::GameOver) => Some(Scene::GameOver(GameOver {})),
-            (Scene::GameOver(scene), ToScene::MainMenu) => Some(Scene::MainMenu(scene.into())),
-            _ => None,
-        }
-    }
-}
-
-pub enum ToScene {
-    MainMenu,
-    GamePlay,
-    GameOver,
 }
 
 use crate::{error::DurakError, game_state::GameState};
 
-pub type SceneResult = Result<Option<ToScene>, DurakError>;
+pub trait SceneTransition<T> {
+    fn to(value: T) -> bool;
+}
+
+pub trait Scene {
+    fn update(
+        &self,
+        state: &mut GameState,
+        _ctx: &Context,
+    ) -> Result<Option<Box<dyn Scene>>, DurakError>;
+    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError>;
+    fn new_boxed() -> Box<Self>
+    where
+        Self: Sized;
+}
+
+pub trait NewBoxed {
+    fn new_boxed() -> Box<Self>;
+}
 
 pub struct MainMenu {}
 
-impl MainMenu {
-    fn new() -> Self {
-        Self {}
-    }
-
-    fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult {
+impl Scene for MainMenu {
+    fn update(
+        &self,
+        state: &mut GameState,
+        _ctx: &Context,
+    ) -> Result<Option<Box<dyn Scene>>, DurakError> {
         state.frames += 1;
         if state.frames > 100 {
-            return Ok(Some(ToScene::GamePlay));
+            return Ok(Some(Box::new(GamePlay::from(self))));
         }
         Ok(None)
     }
@@ -87,6 +84,13 @@ impl MainMenu {
 
         Ok(())
     }
+
+    fn new_boxed() -> Box<Self>
+    where
+        Self: Sized,
+    {
+        Box::new(Self {})
+    }
 }
 
 impl From<&GameOver> for MainMenu {
@@ -94,11 +98,14 @@ impl From<&GameOver> for MainMenu {
         MainMenu {}
     }
 }
-
 pub struct GamePlay {}
 
-impl GamePlay {
-    fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult {
+impl Scene for GamePlay {
+    fn update(
+        &self,
+        state: &mut GameState,
+        _ctx: &Context,
+    ) -> Result<Option<Box<dyn Scene>>, DurakError> {
         state.frames += 1;
         Ok(None)
     }
@@ -120,6 +127,13 @@ impl GamePlay {
 
         Ok(())
     }
+
+    fn new_boxed() -> Box<Self>
+    where
+        Self: Sized,
+    {
+        Box::new(Self {})
+    }
 }
 
 impl From<&MainMenu> for GamePlay {
@@ -130,13 +144,24 @@ impl From<&MainMenu> for GamePlay {
 
 pub struct GameOver {}
 
-impl GameOver {
-    fn update(&self, state: &mut GameState, _ctx: &Context) -> SceneResult {
+impl Scene for GameOver {
+    fn update(
+        &self,
+        state: &mut GameState,
+        _ctx: &Context,
+    ) -> Result<Option<Box<dyn Scene>>, DurakError> {
         todo!()
     }
 
     fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
         todo!()
+    }
+
+    fn new_boxed() -> Box<Self>
+    where
+        Self: Sized,
+    {
+        Box::new(Self {})
     }
 }
 

@@ -5,7 +5,7 @@ use crate::{
     error::DurakError,
     hand::Hand,
     player::Player,
-    scenes::{MainMenu, Scene},
+    scenes::{MainMenu, Scene, SceneWrapper},
 };
 
 pub struct GameState {
@@ -38,7 +38,7 @@ impl GameState {
 }
 
 pub struct Game {
-    pub scene: Scene,
+    pub scene: SceneWrapper,
     pub state: GameState,
 }
 
@@ -48,7 +48,7 @@ impl Game {
             .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
 
         Ok(Game {
-            scene: Scene::MainMenu(MainMenu {}),
+            scene: SceneWrapper::new(MainMenu::new_boxed()),
             state: GameState::new()?,
         })
     }
@@ -56,12 +56,7 @@ impl Game {
 
 impl EventHandler<DurakError> for Game {
     fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        if let Some(to_scene) = self.scene.update(&mut self.state, ctx)? {
-            if let Some(scene) = self.scene.to(to_scene) {
-                self.scene = scene;
-            }
-        }
-
+        self.scene.update(&mut self.state, ctx)?;
         Ok(())
     }
 
