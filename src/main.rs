@@ -1,15 +1,7 @@
-mod card;
-mod deck;
-mod error;
-mod game_state;
-mod hand;
-mod player;
-mod scenes;
-
 use std::{env, path};
-
-use game_state::Game;
 use ggez::{event, ContextBuilder, GameResult};
+
+use durak_rust::game_state::Game;
 
 fn main() -> GameResult {
     let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
