@@ -1,4 +1,4 @@
-use ggegui::{egui, Gui};
+use ggegui::Gui;
 use ggez::{event::EventHandler, graphics::FontData, Context, GameResult};
 
 use crate::{
@@ -13,7 +13,6 @@ pub struct GameState {
     pub times_played: u32,
     pub players: Vec<Player>,
     pub deck: Option<Deck>,
-    pub frames: usize,
     pub gui: Gui,
 }
 
@@ -34,7 +33,6 @@ impl GameState {
                 },
             ],
             deck: None,
-            frames: 0,
             gui: Gui::new(ctx),
         })
     }
@@ -42,7 +40,7 @@ impl GameState {
 
 pub struct Game {
     pub scene: SceneWrapper<GameState>,
-    pub state: GameState,
+    gui: Gui,
 }
 
 impl Game {
@@ -51,19 +49,19 @@ impl Game {
             .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
 
         Ok(Game {
-            scene: SceneWrapper::new(MainMenu::new_boxed()),
-            state: GameState::new(ctx)?,
+            scene: SceneWrapper::new(MainMenu::new_boxed(GameState::new(ctx)?)),
+            gui: Gui::new(ctx),
         })
     }
 }
 
 impl EventHandler<DurakError> for Game {
     fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        self.scene.update(&mut self.state, ctx)?;
+        self.scene.update(&mut self.gui, ctx)?;
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        self.scene.draw(&self.state, ctx)
+        self.scene.draw(&self.gui, ctx)
     }
 }
