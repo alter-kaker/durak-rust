@@ -8,7 +8,7 @@ use crate::{
     error::DurakError,
     hand::Hand,
     player::Player,
-    scenes::{MainMenu, Scene, SceneError},
+    scenes::{MainMenu, Scene, SceneError, SceneWrapper},
 };
 
 pub struct GameState {
@@ -40,18 +40,23 @@ impl GameState {
     }
 }
 
-pub struct Game<T, E: Debug> {
-    scene: Option<Box<dyn Scene<T, E>>>,
+pub struct Game<T, E: Debug>
+where
+    E: From<SceneError> + Debug,
+{
+    scene: SceneWrapper<T, E>,
     gui: Gui,
 }
 
-impl Game<GameState, DurakError> {
+impl Game<GameState, DurakError>
+where
+{
     pub fn new(ctx: &mut Context) -> GameResult<Self> {
         ctx.gfx
             .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
 
         Ok(Game {
-            scene: Some(MainMenu::new_boxed(GameState::new(ctx)?)),
+            scene: SceneWrapper::new(MainMenu::new_boxed(GameState::new(ctx)?)),
             gui: Gui::new(ctx),
         })
     }
@@ -62,19 +67,10 @@ where
     E: From<SceneError> + Debug,
 {
     fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), E> {
-        if let Some(scene) = self.scene.take() {
-            self.scene = Some(scene.update(&mut self.gui, ctx)?);
-            Ok(())
-        } else {
-            Err(SceneError::SceneMissing.into())
-        }
+        self.scene.update(&mut self.gui, ctx)
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), E> {
-        if let Some(scene) = self.scene.as_ref() {
-            scene.draw(&self.gui, ctx)
-        } else {
-            Err(SceneError::SceneMissing.into())
-        }
+        self.scene.draw(&self.gui, ctx)
     }
 }

@@ -8,6 +8,38 @@ use ggez::{
 
 use crate::{error::DurakError, game::GameState};
 
+pub struct SceneWrapper<T, E>
+where
+    E: From<SceneError> + Debug,
+{
+    scene: Option<Box<dyn Scene<T, E>>>,
+}
+
+impl<T, E> SceneWrapper<T, E>
+where
+    E: From<SceneError> + Debug,
+{
+    pub fn new(scene: Box<dyn Scene<T, E>>) -> Self {
+        SceneWrapper { scene: Some(scene) }
+    }
+    pub fn update(&mut self, gui: &mut Gui, ctx: &mut ggez::Context) -> Result<(), E> {
+        if let Some(scene) = self.scene.take() {
+            self.scene = Some(scene.update(gui, ctx)?);
+            Ok(())
+        } else {
+            Err(SceneError::SceneMissing.into())
+        }
+    }
+
+    pub fn draw(&mut self, gui: &Gui, ctx: &mut ggez::Context) -> Result<(), E> {
+        if let Some(scene) = self.scene.as_ref() {
+            scene.draw(gui, ctx)
+        } else {
+            Err(SceneError::SceneMissing.into())
+        }
+    }
+}
+
 pub trait Scene<T, E>
 where
     E: Debug,
@@ -168,5 +200,5 @@ impl From<GamePlay> for GameOver {
 
 #[derive(Debug)]
 pub enum SceneError {
-    SceneMissing
+    SceneMissing,
 }
