@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use ggegui::Gui;
 use ggez::{event::EventHandler, graphics::FontData, Context, GameResult};
 
@@ -6,7 +8,7 @@ use crate::{
     error::DurakError,
     hand::Hand,
     player::Player,
-    scenes::{MainMenu, Scene, SceneWrapper},
+    scenes::{MainMenu, Scene},
 };
 
 pub struct GameState {
@@ -38,30 +40,41 @@ impl GameState {
     }
 }
 
-pub struct Game {
-    pub scene: SceneWrapper<GameState>,
+pub struct Game<T, E: Debug> {
+    scene: Option<Box<dyn Scene<T, E>>>,
     gui: Gui,
 }
 
-impl Game {
+impl Game<GameState, DurakError> {
     pub fn new(ctx: &mut Context) -> GameResult<Self> {
         ctx.gfx
             .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
 
         Ok(Game {
-            scene: SceneWrapper::new(MainMenu::new_boxed(GameState::new(ctx)?)),
+            scene: Some(MainMenu::new_boxed(GameState::new(ctx)?)),
             gui: Gui::new(ctx),
         })
     }
 }
 
-impl EventHandler<DurakError> for Game {
-    fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        self.scene.update(&mut self.gui, ctx)?;
-        Ok(())
+impl<T, E: Debug> EventHandler<E> for Game<T, E>
+where
+    E: From<&'static str>,
+{
+    fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), E> {
+        if let Some(scene) = self.scene.take() {
+            self.scene = Some(scene.update(&mut self.gui, ctx)?);
+            Ok(())
+        } else {
+            Err("No scene".into())
+        }
     }
 
-    fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        self.scene.draw(&self.gui, ctx)
+    fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), E> {
+        if let Some(scene) = self.scene.as_ref() {
+            scene.draw(&self.gui, ctx)
+        } else {
+            Err("No scene".into())
+        }
     }
 }
