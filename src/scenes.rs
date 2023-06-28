@@ -6,7 +6,7 @@ use ggez::{
     Context,
 };
 
-use crate::{error::DurakError, game_state::GameState};
+use crate::{error::DurakError, game::GameState};
 
 pub trait Scene<T, E>
 where
@@ -164,4 +164,9 @@ impl From<GamePlay> for GameOver {
     fn from(value: GamePlay) -> Self {
         GameOver { state: value.state }
     }
+}
+
+#[derive(Debug)]
+pub enum SceneError {
+    SceneMissing
 }

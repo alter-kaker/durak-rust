@@ -8,7 +8,7 @@ use crate::{
     error::DurakError,
     hand::Hand,
     player::Player,
-    scenes::{MainMenu, Scene},
+    scenes::{MainMenu, Scene, SceneError},
 };
 
 pub struct GameState {
@@ -57,16 +57,16 @@ impl Game<GameState, DurakError> {
     }
 }
 
-impl<T, E: Debug> EventHandler<E> for Game<T, E>
+impl<T, E> EventHandler<E> for Game<T, E>
 where
-    E: From<&'static str>,
+    E: From<SceneError> + Debug,
 {
     fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), E> {
         if let Some(scene) = self.scene.take() {
             self.scene = Some(scene.update(&mut self.gui, ctx)?);
             Ok(())
         } else {
-            Err("No scene".into())
+            Err(SceneError::SceneMissing.into())
         }
     }
 
@@ -74,7 +74,7 @@ where
         if let Some(scene) = self.scene.as_ref() {
             scene.draw(&self.gui, ctx)
         } else {
-            Err("No scene".into())
+            Err(SceneError::SceneMissing.into())
         }
     }
 }

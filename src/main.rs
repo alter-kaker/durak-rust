@@ -1,7 +1,7 @@
 use std::{env, path};
 use ggez::{event, ContextBuilder, GameResult};
 
-use durak_rust::game_state::Game;
+use durak_rust::game::Game;
 
 fn main() -> GameResult {
     let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
