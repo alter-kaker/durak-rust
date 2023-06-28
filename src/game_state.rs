@@ -1,3 +1,4 @@
+use ggegui::{egui, Gui};
 use ggez::{event::EventHandler, graphics::FontData, Context, GameResult};
 
 use crate::{
@@ -13,10 +14,11 @@ pub struct GameState {
     pub players: Vec<Player>,
     pub deck: Option<Deck>,
     pub frames: usize,
+    pub gui: Gui,
 }
 
 impl GameState {
-    pub fn new() -> Result<Self, DurakError> {
+    pub fn new(ctx: &Context) -> Result<Self, DurakError> {
         Ok(Self {
             times_played: 0,
             players: vec![
@@ -33,6 +35,7 @@ impl GameState {
             ],
             deck: None,
             frames: 0,
+            gui: Gui::new(ctx),
         })
     }
 }
@@ -49,7 +52,7 @@ impl Game {
 
         Ok(Game {
             scene: SceneWrapper::new(MainMenu::new_boxed()),
-            state: GameState::new()?,
+            state: GameState::new(ctx)?,
         })
     }
 }
@@ -61,6 +64,6 @@ impl EventHandler<DurakError> for Game {
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), DurakError> {
-        self.scene.draw(&self.state, ctx)
+        self.scene.draw(&mut self.state, ctx)
     }
 }

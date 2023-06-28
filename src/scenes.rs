@@ -1,6 +1,7 @@
+use ggegui::egui;
 use ggez::{
     glam::Vec2,
-    graphics::{Canvas, Color, Text},
+    graphics::{Canvas, Color, Text, Drawable, DrawParam},
     Context,
 };
 
@@ -12,14 +13,14 @@ impl<T> SceneWrapper<T> {
     pub fn new(scene: Box<dyn Scene<T>>) -> Self {
         SceneWrapper { scene }
     }
-    pub fn update(&mut self, state: &mut T, ctx: &Context) -> Result<(), DurakError> {
+    pub fn update(&mut self, state: &mut T, ctx: &mut Context) -> Result<(), DurakError> {
         if let Some(new_scene) = self.scene.update(state, ctx)? {
             self.scene = new_scene;
         }
         Ok(())
     }
 
-    pub fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
+    pub fn draw(&self, state: &mut GameState, ctx: &mut Context) -> Result<(), DurakError> {
         self.scene.draw(state, ctx)
     }
 }
@@ -30,9 +31,9 @@ pub trait Scene<T> {
     fn update(
         &self,
         state: &mut T,
-        _ctx: &Context,
+        _ctx: &mut Context,
     ) -> Result<Option<Box<dyn Scene<T>>>, DurakError>;
-    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError>;
+    fn draw(&self, state: &mut GameState, ctx: &mut Context) -> Result<(), DurakError>;
     fn new_boxed() -> Box<Self>
     where
         Self: Sized;
@@ -44,20 +45,24 @@ impl Scene<GameState> for MainMenu {
     fn update(
         &self,
         state: &mut GameState,
-        _ctx: &Context,
+        ctx: &mut Context,
     ) -> Result<Option<Box<dyn Scene<GameState>>>, DurakError> {
         state.frames += 1;
-        if state.frames > 100 {
-            return Ok(Some(Box::new(GamePlay::from(self))));
-        }
-        Ok(None)
+        let mut result: Option<Box<dyn Scene<GameState>>> = None;
+        egui::Area::new("id").show(&state.gui.ctx(), |ui| {
+            if ui.button("Next").clicked() {
+                result = Some(Box::new(GamePlay::from(self)));
+            }
+        });
+        state.gui.update(ctx);
+        Ok(result)
     }
 
-    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
+    fn draw(&self, state: &mut GameState, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
 
         // Text is drawn from the top-left corner.
-        let offset = state.frames as f32 / 10.0;
+        let offset = 10.;
         let dest_point = Vec2::new(offset, offset);
         canvas.draw(
             Text::new(format!("Main Menu! Frame {}", state.frames))
@@ -65,6 +70,8 @@ impl Scene<GameState> for MainMenu {
                 .set_scale(24.),
             dest_point,
         );
+
+        state.gui.draw(&mut canvas, DrawParam::new());
 
         canvas.finish(ctx)?;
 
@@ -94,13 +101,13 @@ impl Scene<GameState> for GamePlay {
     fn update(
         &self,
         state: &mut GameState,
-        _ctx: &Context,
+        _ctx: &mut Context,
     ) -> Result<Option<Box<dyn Scene<GameState>>>, DurakError> {
         state.frames += 1;
         Ok(None)
     }
 
-    fn draw(&self, state: &GameState, ctx: &mut Context) -> Result<(), DurakError> {
+    fn draw(&self, state: &mut GameState, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
 
         // Text is drawn from the top-left corner.
@@ -138,12 +145,12 @@ impl Scene<GameState> for GameOver {
     fn update(
         &self,
         _state: &mut GameState,
-        _ctx: &Context,
+        _ctx: &mut Context,
     ) -> Result<Option<Box<dyn Scene<GameState>>>, DurakError> {
         todo!()
     }
 
-    fn draw(&self, _state: &GameState, _ctx: &mut Context) -> Result<(), DurakError> {
+    fn draw(&self, _state: &mut GameState, _ctx: &mut Context) -> Result<(), DurakError> {
         todo!()
     }
 
