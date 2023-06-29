@@ -4,10 +4,11 @@ use ggez::{
     Context,
 };
 
-use crate::{error::DurakError, game::GameState, scenes::Scene};
+use crate::{error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene};
 
 pub struct MainMenu {
     state: GameState,
+    no_of_players: usize,
 }
 
 impl Scene<GameState, DurakError> for MainMenu {
@@ -20,21 +21,39 @@ impl Scene<GameState, DurakError> for MainMenu {
             .show(&gui.ctx(), |ui| {
                 ui.label("Main Menu");
                 ui.label(format!("{} times played", &self.state.times_played));
-                let next = ui.button("Next").clicked();
-                for player in self.state.players.iter_mut() {
-                    ui.text_edit_singleline(&mut player.name);
+                for player in &mut self.state.players {
+                    let name = &mut player.name;
+                    if ui.text_edit_singleline(name).changed() {};
                 }
-                next
+                if ui.button("Add player").clicked() && self.no_of_players < 3 {
+                    self.no_of_players += 1;
+                    if self.no_of_players > self.state.players.len() {
+                        self.state.players.push(Player {
+                            name: String::new(),
+                            hand: Hand { cards: Vec::new() },
+                            human: false,
+                        });
+                    }
+                }
+                Ok::<bool, DurakError>(ui.button("Next").clicked())
             })
-            .inner;
+            .inner?;
         gui.update(ctx);
+
+        if next {
+            println!("{:?}", self.state.players);
+            println!("{:?}", self.no_of_players);
+        }
+
         if next
             && !self
                 .state
                 .players
                 .iter()
+                .take(self.no_of_players)
                 .any(|player| player.name.is_empty())
         {
+            self.state.players.truncate(self.no_of_players);
             return Ok(Box::new(GamePlay::from(*self)));
         }
 
@@ -49,17 +68,17 @@ impl Scene<GameState, DurakError> for MainMenu {
         Ok(())
     }
 
-    fn new_boxed(state: GameState) -> Box<Self>
-    where
-        Self: Sized,
-    {
-        Box::new(Self { state })
+    fn new(state: GameState) -> MainMenu {
+        MainMenu {
+            no_of_players: state.players.len(),
+            state,
+        }
     }
 }
 
 impl From<GameOver> for MainMenu {
     fn from(value: GameOver) -> Self {
-        MainMenu { state: value.state }
+        MainMenu::new(value.state)
     }
 }
 pub struct GamePlay {
@@ -75,6 +94,9 @@ impl Scene<GameState, DurakError> for GamePlay {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label("Game Play");
+                for name in self.state.players.iter().map(|player| &player.name) {
+                    ui.label(name);
+                }
                 ui.label(format!("{} times played", &self.state.times_played));
                 ui.button("Next").clicked()
             })
@@ -97,11 +119,8 @@ impl Scene<GameState, DurakError> for GamePlay {
         Ok(())
     }
 
-    fn new_boxed(state: GameState) -> Box<Self>
-    where
-        Self: Sized,
-    {
-        Box::new(Self { state })
+    fn new(state: GameState) -> GamePlay {
+        GamePlay { state }
     }
 }
 
@@ -145,11 +164,8 @@ impl Scene<GameState, DurakError> for GameOver {
         Ok(())
     }
 
-    fn new_boxed(state: GameState) -> Box<Self>
-    where
-        Self: Sized,
-    {
-        Box::new(Self { state })
+    fn new(state: GameState) -> GameOver {
+        GameOver { state }
     }
 }
 

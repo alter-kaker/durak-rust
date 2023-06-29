@@ -1,5 +1,6 @@
 use crate::hand::Hand;
 
+#[derive(Debug)]
 pub struct Player {
     pub name: String,
     pub hand: Hand,
