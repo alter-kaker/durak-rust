@@ -73,4 +73,13 @@ where
     fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), E> {
         self.scene.draw(&self.gui, ctx)
     }
+
+	fn text_input_event(
+		&mut self,
+		_ctx: &mut ggez::Context,
+		character: char,
+	) -> Result<(), E> {
+		self.gui.input.text_input_event(character);
+		Ok(())
+	}
 }

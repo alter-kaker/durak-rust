@@ -1,5 +1,8 @@
-use ggegui::{Gui, egui::Area};
-use ggez::{Context, graphics::{Canvas, Color, DrawParam, Drawable}};
+use ggegui::{egui::Area, Gui};
+use ggez::{
+    graphics::{Canvas, Color, DrawParam, Drawable},
+    Context,
+};
 
 use crate::{error::DurakError, game::GameState, scenes::Scene};
 
@@ -9,7 +12,7 @@ pub struct MainMenu {
 
 impl Scene<GameState, DurakError> for MainMenu {
     fn update(
-        self: Box<Self>,
+        mut self: Box<Self>,
         gui: &mut Gui,
         ctx: &mut Context,
     ) -> Result<Box<dyn Scene<GameState, DurakError>>, DurakError> {
@@ -17,11 +20,21 @@ impl Scene<GameState, DurakError> for MainMenu {
             .show(&gui.ctx(), |ui| {
                 ui.label("Main Menu");
                 ui.label(format!("{} times played", &self.state.times_played));
-                ui.button("Next").clicked()
+                let next = ui.button("Next").clicked();
+                for player in self.state.players.iter_mut() {
+                    ui.text_edit_singleline(&mut player.name);
+                }
+                next
             })
             .inner;
         gui.update(ctx);
-        if next {
+        if next
+            && !self
+                .state
+                .players
+                .iter()
+                .any(|player| player.name.is_empty())
+        {
             return Ok(Box::new(GamePlay::from(*self)));
         }
 
