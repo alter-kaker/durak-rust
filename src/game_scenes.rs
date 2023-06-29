@@ -21,11 +21,11 @@ impl Scene<GameState, DurakError> for MainMenu {
             .show(&gui.ctx(), |ui| {
                 ui.label("Main Menu");
                 ui.label(format!("{} times played", &self.state.times_played));
-                for player in &mut self.state.players {
+                for player in &mut self.state.players[0..self.no_of_players] {
                     let name = &mut player.name;
                     if ui.text_edit_singleline(name).changed() {};
                 }
-                if ui.button("Add player").clicked() && self.no_of_players < 3 {
+                if ui.button("Add player").clicked() && self.no_of_players < 4 {
                     self.no_of_players += 1;
                     if self.no_of_players > self.state.players.len() {
                         self.state.players.push(Player {
@@ -34,6 +34,9 @@ impl Scene<GameState, DurakError> for MainMenu {
                             human: false,
                         });
                     }
+                }
+                if ui.button("Remove player").clicked() && self.no_of_players > 2 {
+                    self.no_of_players -= 1;
                 }
                 Ok::<bool, DurakError>(ui.button("Next").clicked())
             })
