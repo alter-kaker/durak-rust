@@ -6,9 +6,10 @@ use ggez::{event::EventHandler, graphics::FontData, Context, GameResult};
 use crate::{
     deck::Deck,
     error::DurakError,
+    game_scenes::MainMenu,
     hand::Hand,
     player::Player,
-    scenes::{SceneError, SceneWrapper, Scene}, game_scenes::MainMenu,
+    scenes::{Scene, SceneError, SceneWrapper},
 };
 
 pub struct GameState {
@@ -48,15 +49,15 @@ where
     gui: Gui,
 }
 
-impl Game<GameState, DurakError>
-where
-{
+impl Game<GameState, DurakError> {
     pub fn new(ctx: &mut Context) -> GameResult<Self> {
         ctx.gfx
             .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
 
+        let state = GameState::new(ctx)?;
+        let scene = MainMenu::new_boxed(state)?;
         Ok(Game {
-            scene: SceneWrapper::new(MainMenu::new_boxed(GameState::new(ctx)?)),
+            scene: SceneWrapper::new(scene),
             gui: Gui::new(ctx),
         })
     }
@@ -74,12 +75,8 @@ where
         self.scene.draw(&self.gui, ctx)
     }
 
-	fn text_input_event(
-		&mut self,
-		_ctx: &mut ggez::Context,
-		character: char,
-	) -> Result<(), E> {
-		self.gui.input.text_input_event(character);
-		Ok(())
-	}
+    fn text_input_event(&mut self, _ctx: &mut ggez::Context, character: char) -> Result<(), E> {
+        self.gui.input.text_input_event(character);
+        Ok(())
+    }
 }

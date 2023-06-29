@@ -4,7 +4,9 @@ use ggez::{
     Context,
 };
 
-use crate::{error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene};
+use crate::{
+    deck::Deck, error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene,
+};
 
 pub struct MainMenu {
     state: GameState,
@@ -52,7 +54,8 @@ impl Scene<GameState, DurakError> for MainMenu {
                 .any(|player| player.name.is_empty())
         {
             self.state.players.truncate(self.no_of_players);
-            return Ok(Box::new(GamePlay::from(*self)));
+            let result = Result::<GamePlay, DurakError>::from(*self)?;
+            return Ok(Box::new(result));
         }
 
         Ok(self)
@@ -66,15 +69,15 @@ impl Scene<GameState, DurakError> for MainMenu {
         Ok(())
     }
 
-    fn new(state: GameState) -> MainMenu {
-        MainMenu {
+    fn new(state: GameState) -> Result<MainMenu, DurakError> {
+        Ok(MainMenu {
             no_of_players: state.players.len(),
             state,
-        }
+        })
     }
 }
 
-impl From<GameOver> for MainMenu {
+impl From<GameOver> for Result<MainMenu, DurakError> {
     fn from(value: GameOver) -> Self {
         MainMenu::new(value.state)
     }
@@ -92,8 +95,13 @@ impl Scene<GameState, DurakError> for GamePlay {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label("Game Play");
-                for name in self.state.players.iter().map(|player| &player.name) {
-                    ui.label(name);
+                for player in &self.state.players {
+                    ui.label(&player.name);
+                    ui.vertical(|ui| {
+                        for card in &player.hand.cards {
+                            ui.label(format!("{:?}", card));
+                        }
+                    });
                 }
                 ui.label(format!("{} times played", &self.state.times_played));
                 ui.button("Next").clicked()
@@ -117,14 +125,28 @@ impl Scene<GameState, DurakError> for GamePlay {
         Ok(())
     }
 
-    fn new(state: GameState) -> GamePlay {
-        GamePlay { state }
+    fn new(mut state: GameState) -> Result<GamePlay, DurakError> {
+        state.deck = Some(Deck::new());
+        for _ in 0..7 {
+            for player in &mut state.players {
+                let card = state
+                    .deck
+                    .as_mut()
+                    .ok_or(DurakError::from("Deck Error"))?
+                    .pop()
+                    .ok_or(DurakError::from("Insufficient Cards"))?;
+                player.hand.cards.push(card);
+            }
+        }
+        let result = GamePlay { state };
+        Ok(result)
     }
 }
 
-impl From<MainMenu> for GamePlay {
+impl From<MainMenu> for Result<GamePlay, DurakError> {
     fn from(value: MainMenu) -> Self {
-        GamePlay { state: value.state }
+        
+        GamePlay::new(value.state)
     }
 }
 
@@ -147,7 +169,8 @@ impl Scene<GameState, DurakError> for GameOver {
             .inner;
         gui.update(ctx);
         if next {
-            return Ok(Box::new(MainMenu::from(*self)));
+            let result = Result::<MainMenu, DurakError>::from(*self)?;
+            return Ok(Box::new(result));
         }
 
         Ok(self)
@@ -162,8 +185,8 @@ impl Scene<GameState, DurakError> for GameOver {
         Ok(())
     }
 
-    fn new(state: GameState) -> GameOver {
-        GameOver { state }
+    fn new(state: GameState) -> Result<GameOver, DurakError> {
+        Ok(GameOver{state})
     }
 }
 

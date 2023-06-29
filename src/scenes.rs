@@ -45,14 +45,14 @@ where
         _ctx: &mut Context,
     ) -> Result<Box<dyn Scene<T, E>>, E>;
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), E>;
-    fn new(state: T) -> Self
+    fn new(state: T) -> Result<Self, E>
     where
         Self: Sized;
-    fn new_boxed(state: T) -> Box<Self>
+    fn new_boxed(state: T) -> Result<Box<Self>, E>
     where
         Self: Sized,
     {
-        Box::new(Self::new(state))
+        Ok(Box::new(Self::new(state)?))
     }
 }
 

@@ -7,24 +7,28 @@ pub struct Deck {
     kozyr: Suit,
 }
 
-impl Deck {
-    pub fn new() -> Self {
-        let mut cards: Vec<Card> = [Suit::Hearts, Suit::Spades, Suit::Diamonds, Suit::Clubs]
+impl Default for Deck {
+    fn default() -> Self {
+        let mut cards: Vec<Card> = (0..4)
             .into_iter()
-            .enumerate()
             .flat_map({
-                |(i, suit)| {
-                    (6..=14).into_iter().enumerate().map(move |(j, rank)| {
-                        let suit = suit.clone();
+                |suit| {
+                    (0..9).into_iter().map(move |rank| {
+                        let suit = match suit {
+                            0 => Suit::Hearts,
+                            1 => Suit::Spades,
+                            2 => Suit::Diamonds,
+                            _ => Suit::Clubs,
+                        };
                         let rank = match rank {
-                            6 => Rank::Six,
-                            7 => Rank::Seven,
-                            8 => Rank::Eight,
-                            9 => Rank::Nine,
-                            10 => Rank::Ten,
-                            11 => Rank::Jack,
-                            12 => Rank::Queen,
-                            13 => Rank::King,
+                            0 => Rank::Six,
+                            1 => Rank::Seven,
+                            2 => Rank::Eight,
+                            3 => Rank::Nine,
+                            4 => Rank::Ten,
+                            5 => Rank::Jack,
+                            6 => Rank::Queen,
+                            7 => Rank::King,
                             _ => Rank::Ace,
                         };
                         Card::new(suit, rank)
@@ -39,6 +43,16 @@ impl Deck {
             kozyr: cards[0].suit(),
             cards,
         }
+    }
+}
+
+impl Deck {
+    pub fn new() -> Self {
+        Deck::default()
+    }
+
+    pub fn cards(&self) -> &Vec<Card> {
+        &self.cards
     }
 
     pub fn pop(&mut self) -> Option<Card> {
