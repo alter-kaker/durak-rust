@@ -43,11 +43,6 @@ impl Scene<GameState, DurakError> for MainMenu {
             .inner?;
         gui.update(ctx);
 
-        if next {
-            println!("{:?}", self.state.players);
-            println!("{:?}", self.no_of_players);
-        }
-
         if next
             && !self
                 .state
