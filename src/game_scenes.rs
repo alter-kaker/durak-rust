@@ -1,11 +1,13 @@
 use ggegui::{egui::Area, Gui};
 use ggez::{
-    graphics::{Canvas, Color, DrawParam, Drawable},
+    glam::vec2,
+    graphics::{Canvas, Color, DrawParam, Drawable, Rect},
     Context,
 };
 
 use crate::{
     deck::Deck, error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene,
+    sprite::Sprite, storage,
 };
 
 pub struct MainMenu {
@@ -63,6 +65,7 @@ impl Scene<GameState, DurakError> for MainMenu {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
+        
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
 
@@ -112,13 +115,15 @@ impl Scene<GameState, DurakError> for GamePlay {
             self.state.times_played += 1;
             return Ok(Box::new(GameOver::from(*self)));
         }
-
         Ok(self)
     }
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
-
+        if let Some(deck) = &self.state.deck {
+            println!("gonna draw deck");
+            canvas.draw(deck, DrawParam::new().dest(vec2(100., 100.)));
+        }
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
 
@@ -126,7 +131,9 @@ impl Scene<GameState, DurakError> for GamePlay {
     }
 
     fn new(mut state: GameState) -> Result<GamePlay, DurakError> {
-        state.deck = Some(Deck::new());
+        let image = storage::card_image()?.ok_or("Cannot load card image")?;
+
+        state.deck = Some(Deck::new(&image)?);
         for _ in 0..7 {
             for player in &mut state.players {
                 let card = state
@@ -145,7 +152,6 @@ impl Scene<GameState, DurakError> for GamePlay {
 
 impl From<MainMenu> for Result<GamePlay, DurakError> {
     fn from(value: MainMenu) -> Self {
-        
         GamePlay::new(value.state)
     }
 }
@@ -186,7 +192,7 @@ impl Scene<GameState, DurakError> for GameOver {
     }
 
     fn new(state: GameState) -> Result<GameOver, DurakError> {
-        Ok(GameOver{state})
+        Ok(GameOver { state })
     }
 }
 

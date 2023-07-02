@@ -6,3 +6,5 @@ mod hand;
 mod player;
 mod scenes;
 mod game_scenes;
+mod sprite;
+pub mod storage;

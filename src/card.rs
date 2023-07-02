@@ -1,12 +1,20 @@
+use ggez::graphics::Drawable;
+
+use crate::sprite::Sprite;
+
+pub const CARD_WIDTH: f32 = 71.;
+pub const CARD_HEIGHT: f32 = 96.;
+
 #[derive(Debug)]
 pub struct Card {
     suit: Suit,
     rank: Rank,
+    sprite: Sprite,
 }
 
 impl Card {
-    pub fn new(suit: Suit, rank: Rank) -> Self {
-        Card { suit, rank }
+    pub fn new(suit: Suit, rank: Rank, sprite: Sprite) -> Self {
+        Card { suit, rank, sprite }
     }
 
     pub fn suit(&self) -> Suit {
@@ -33,6 +41,23 @@ impl PartialOrd for Card {
         } else {
             self.rank.partial_cmp(&other.rank)
         }
+    }
+}
+
+impl Drawable for Card {
+    fn draw(
+        &self,
+        canvas: &mut ggez::graphics::Canvas,
+        param: impl Into<ggez::graphics::DrawParam>,
+    ) {
+        canvas.draw(&self.sprite, param)
+    }
+
+    fn dimensions(
+        &self,
+        gfx: &impl ggez::context::Has<ggez::graphics::GraphicsContext>,
+    ) -> Option<ggez::graphics::Rect> {
+        todo!()
     }
 }
 
