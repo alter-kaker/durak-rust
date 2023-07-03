@@ -33,6 +33,13 @@ where
             Err(SceneError::SceneMissing.into())
         }
     }
+    pub fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), E> {
+        if let Some(scene) = self.scene.as_mut() {
+            scene.mouse_motion_event(x, y, ctx)
+        } else {
+            Err(SceneError::SceneMissing.into())
+        }
+    }
 }
 
 pub trait Scene<T, E>
@@ -45,6 +52,9 @@ where
         _ctx: &mut Context,
     ) -> Result<Box<dyn Scene<T, E>>, E>;
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), E>;
+    fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), E> {
+        Ok(())
+    }
     fn new(state: T) -> Result<Self, E>
     where
         Self: Sized;

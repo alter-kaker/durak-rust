@@ -65,7 +65,7 @@ impl Scene<GameState, DurakError> for MainMenu {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
-        
+
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
 
@@ -97,15 +97,6 @@ impl Scene<GameState, DurakError> for GamePlay {
     ) -> Result<Box<dyn Scene<GameState, DurakError>>, DurakError> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
-                ui.label("Game Play");
-                for player in &self.state.players {
-                    ui.label(&player.name);
-                    ui.vertical(|ui| {
-                        for card in &player.hand.cards {
-                            ui.label(format!("{:?}", card));
-                        }
-                    });
-                }
                 ui.label(format!("{} times played", &self.state.times_played));
                 ui.button("Next").clicked()
             })
@@ -120,9 +111,14 @@ impl Scene<GameState, DurakError> for GamePlay {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
+        for (i, player) in self.state.players.iter().enumerate() {
+            canvas.draw(
+                &player.hand,
+                DrawParam::new().dest(vec2(100., 100. * (i + 1) as f32)),
+            );
+        }
         if let Some(deck) = &self.state.deck {
-            println!("gonna draw deck");
-            canvas.draw(deck, DrawParam::new().dest(vec2(100., 100.)));
+            canvas.draw(deck, DrawParam::new());
         }
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
@@ -130,10 +126,15 @@ impl Scene<GameState, DurakError> for GamePlay {
         Ok(())
     }
 
+    fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), DurakError> {
+        self.state.deck.as_ref().unwrap().hover(vec2(x, y));
+        Ok(())
+    }
+
     fn new(mut state: GameState) -> Result<GamePlay, DurakError> {
         let image = storage::card_image()?.ok_or("Cannot load card image")?;
 
-        state.deck = Some(Deck::new(&image)?);
+        state.deck = Some(Deck::new(&image, vec2(0., 0.))?);
         for _ in 0..7 {
             for player in &mut state.players {
                 let card = state

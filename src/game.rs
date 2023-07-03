@@ -79,4 +79,14 @@ where
         self.gui.input.text_input_event(character);
         Ok(())
     }
+    fn mouse_motion_event(
+        &mut self,
+        ctx: &mut Context,
+        x: f32,
+        y: f32,
+        _dx: f32,
+        _dy: f32,
+    ) -> Result<(), E> {
+        self.scene.mouse_motion_event(x, y, ctx)
+    }
 }
