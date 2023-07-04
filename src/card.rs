@@ -1,4 +1,7 @@
-use ggez::graphics::Drawable;
+use std::hash::Hash;
+
+use ggez::graphics::{Drawable, Image, Rect};
+use indexmap::{set::Iter, IndexSet};
 
 use crate::sprite::Sprite;
 
@@ -10,11 +13,17 @@ pub struct Card {
     suit: Suit,
     rank: Rank,
     sprite: Sprite,
+    id: usize,
 }
 
 impl Card {
-    pub fn new(suit: Suit, rank: Rank, sprite: Sprite) -> Self {
-        Card { suit, rank, sprite }
+    pub fn new(suit: Suit, rank: Rank, sprite: Sprite, id: usize) -> Self {
+        Card {
+            suit,
+            rank,
+            sprite,
+            id,
+        }
     }
 
     pub fn suit(&self) -> Suit {
@@ -23,6 +32,14 @@ impl Card {
 
     pub fn rank(&self) -> Rank {
         self.rank
+    }
+}
+
+impl Hash for Card {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.suit.hash(state);
+        self.rank.hash(state);
+        self.id.hash(state);
     }
 }
 
@@ -61,7 +78,7 @@ impl Drawable for Card {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
 pub enum Suit {
     Hearts,
     Diamonds,
@@ -69,7 +86,7 @@ pub enum Suit {
     Clubs,
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy, Hash)]
 pub enum Rank {
     Six = 6,
     Seven = 7,
@@ -80,4 +97,131 @@ pub enum Rank {
     Queen = 12,
     King = 13,
     Ace = 14,
+}
+
+#[derive(Debug, Default)]
+pub struct Cards(IndexSet<Card>);
+impl Cards {
+    pub fn new() -> Self {
+        Cards(IndexSet::new())
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn insert(&mut self, value: Card) -> bool {
+        self.0.insert(value)
+    }
+
+    pub fn pop(&mut self) -> Option<Card> {
+        self.0.pop()
+    }
+
+    pub fn take(&mut self, value: &Card) -> Option<Card> {
+        self.0.shift_take(value)
+    }
+
+    pub fn get_index(&mut self, index: usize) -> Option<&Card> {
+        self.0.get_index(index)
+    }
+
+    pub fn swap(&mut self, a: usize, b: usize) {
+        self.0.swap_indices(a, b)
+    }
+
+    pub fn iter(&self) -> Iter<'_, Card> {
+        self.0.iter()
+    }
+}
+
+impl From<IndexSet<Card>> for Cards {
+    fn from(value: IndexSet<Card>) -> Self {
+        Cards(value)
+    }
+}
+
+impl FromIterator<Card> for Cards {
+    fn from_iter<T: IntoIterator<Item = Card>>(iter: T) -> Self {
+        let mut cards = Cards::new();
+        for card in iter {
+            cards.insert(card);
+        }
+
+        cards
+    }
+}
+
+impl IntoIterator for Cards {
+    type Item = Card;
+
+    type IntoIter = indexmap::set::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+#[derive(Debug)]
+pub struct CardFactory {
+    decks_made: usize,
+    image: Image,
+}
+
+impl CardFactory {
+    pub fn new(image: Image) -> Self {
+        CardFactory {
+            decks_made: 0,
+            image,
+        }
+    }
+
+    pub fn get_deck(&mut self) -> Cards {
+        let w = 1. / 9.;
+        let h = 1. / 4.;
+
+        let deck_i = self.decks_made;
+        self.decks_made += 1;
+
+        let suit_range = 0..4;
+        let rank_range = 0..9;
+
+        suit_range
+            .flat_map({
+                |i| {
+                    let image = self.image.clone();
+                    rank_range.clone().map(move |j| {
+                        let closure = |j| {
+                            let suit = match i {
+                                0 => Suit::Hearts,
+                                1 => Suit::Spades,
+                                2 => Suit::Diamonds,
+                                _ => Suit::Clubs,
+                            };
+                            let rank = match j {
+                                0 => Rank::Six,
+                                1 => Rank::Seven,
+                                2 => Rank::Eight,
+                                3 => Rank::Nine,
+                                4 => Rank::Ten,
+                                5 => Rank::Jack,
+                                6 => Rank::Queen,
+                                7 => Rank::King,
+                                _ => Rank::Ace,
+                            };
+                            let x = w * j as f32;
+                            let y = h * i as f32;
+                            let src = Rect { x, y, w, h };
+                            let sprite = Sprite {
+                                src,
+                                image: image.clone(),
+                            };
+                            Card::new(suit, rank, sprite, deck_i)
+                        };
+                        closure(j)
+                    })
+                }
+            })
+            .collect()
+    }
 }

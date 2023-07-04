@@ -1,13 +1,12 @@
 use ggegui::{egui::Area, Gui};
 use ggez::{
     glam::vec2,
-    graphics::{Canvas, Color, DrawParam, Drawable, Rect},
+    graphics::{Canvas, Color, DrawParam, Drawable},
     Context,
 };
 
 use crate::{
-    deck::Deck, error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene,
-    sprite::Sprite, storage,
+    deck::Deck, error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene, storage,
 };
 
 pub struct MainMenu {
