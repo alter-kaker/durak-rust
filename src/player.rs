@@ -11,7 +11,7 @@ impl Player {
     pub fn new(name: String, human: bool) -> Self {
         Player {
             name,
-            hand: Hand::default(),
+            hand: Hand::new(),
             human,
         }
     }

@@ -6,7 +6,8 @@ use ggez::{
 };
 
 use crate::{
-    deck::Deck, error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene, storage,
+    deck::Deck, error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene,
+    storage,
 };
 
 pub struct MainMenu {
@@ -33,7 +34,7 @@ impl Scene<GameState, DurakError> for MainMenu {
                     if self.no_of_players > self.state.players.len() {
                         self.state.players.push(Player {
                             name: String::new(),
-                            hand: Hand { cards: Vec::new() },
+                            hand: Hand::new(),
                             human: false,
                         });
                     }
@@ -126,14 +127,13 @@ impl Scene<GameState, DurakError> for GamePlay {
     }
 
     fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), DurakError> {
-        self.state.deck.as_ref().unwrap().hover(vec2(x, y));
         Ok(())
     }
 
     fn new(mut state: GameState) -> Result<GamePlay, DurakError> {
         let image = storage::card_image()?.ok_or("Cannot load card image")?;
 
-        state.deck = Some(Deck::new(&image, vec2(0., 0.))?);
+        state.deck = Some(Deck::new(&image)?);
         for _ in 0..7 {
             for player in &mut state.players {
                 let card = state
@@ -142,7 +142,7 @@ impl Scene<GameState, DurakError> for GamePlay {
                     .ok_or(DurakError::from("Deck Error"))?
                     .pop()
                     .ok_or(DurakError::from("Insufficient Cards"))?;
-                player.hand.cards.push(card);
+                player.hand.insert(card);
             }
         }
         let result = GamePlay { state };

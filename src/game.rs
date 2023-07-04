@@ -26,12 +26,12 @@ impl GameState {
             players: vec![
                 Player {
                     name: String::new(),
-                    hand: Hand { cards: Vec::new() },
+                    hand: Hand ::new(),
                     human: true,
                 },
                 Player {
                     name: String::from("Opponent"),
-                    hand: Hand { cards: Vec::new() },
+                    hand: Hand ::new(),
                     human: false,
                 },
             ],

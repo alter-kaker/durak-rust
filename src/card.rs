@@ -13,16 +13,16 @@ pub struct Card {
     suit: Suit,
     rank: Rank,
     sprite: Sprite,
-    id: usize,
+    deck_id: usize,
 }
 
 impl Card {
-    pub fn new(suit: Suit, rank: Rank, sprite: Sprite, id: usize) -> Self {
+    pub fn new(suit: Suit, rank: Rank, sprite: Sprite, deck_id: usize) -> Self {
         Card {
             suit,
             rank,
             sprite,
-            id,
+            deck_id,
         }
     }
 
@@ -39,7 +39,7 @@ impl Hash for Card {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.suit.hash(state);
         self.rank.hash(state);
-        self.id.hash(state);
+        self.deck_id.hash(state);
     }
 }
 
