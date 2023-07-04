@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use ggegui::{egui::Area, Gui};
 use ggez::{
     glam::vec2,
@@ -6,7 +8,12 @@ use ggez::{
 };
 
 use crate::{
-    deck::Deck, error::DurakError, game::GameState, hand::Hand, player::Player, scenes::Scene,
+    deck::Deck,
+    error::DurakError,
+    game::GameState,
+    hand::Hand,
+    player::Player,
+    scenes::{Scene, SceneTransition},
     storage,
 };
 
@@ -56,7 +63,7 @@ impl Scene<GameState, DurakError> for MainMenu {
                 .any(|player| player.name.is_empty())
         {
             self.state.players.truncate(self.no_of_players);
-            let result = Result::<GamePlay, DurakError>::from(*self)?;
+            let result = self.transition()?;
             return Ok(Box::new(result));
         }
 
@@ -78,13 +85,17 @@ impl Scene<GameState, DurakError> for MainMenu {
             state,
         })
     }
-}
 
-impl From<GameOver> for Result<MainMenu, DurakError> {
-    fn from(value: GameOver) -> Self {
-        MainMenu::new(value.state)
+    fn take_state(self) -> GameState
+    where
+        Self: Sized,
+    {
+        self.state
     }
 }
+
+impl SceneTransition<GamePlay, GameState, DurakError> for MainMenu {}
+
 pub struct GamePlay {
     state: GameState,
 }
@@ -104,7 +115,8 @@ impl Scene<GameState, DurakError> for GamePlay {
         gui.update(ctx);
         if next {
             self.state.times_played += 1;
-            return Ok(Box::new(GameOver::from(*self)));
+            let result = <Self as SceneTransition<GameOver, GameState, DurakError>>::transition(*self)?;
+            return Ok(Box::new(result));
         }
         Ok(self)
     }
@@ -148,13 +160,16 @@ impl Scene<GameState, DurakError> for GamePlay {
         let result = GamePlay { state };
         Ok(result)
     }
-}
 
-impl From<MainMenu> for Result<GamePlay, DurakError> {
-    fn from(value: MainMenu) -> Self {
-        GamePlay::new(value.state)
+    fn take_state(self) -> GameState
+    where
+        Self: Sized,
+    {
+        self.state
     }
 }
+impl SceneTransition<GameOver, GameState, DurakError> for GamePlay {}
+impl SceneTransition<MainMenu, GameState, DurakError> for GamePlay {}
 
 pub struct GameOver {
     state: GameState,
@@ -175,7 +190,7 @@ impl Scene<GameState, DurakError> for GameOver {
             .inner;
         gui.update(ctx);
         if next {
-            let result = Result::<MainMenu, DurakError>::from(*self)?;
+            let result = self.transition()?;
             return Ok(Box::new(result));
         }
 
@@ -194,10 +209,13 @@ impl Scene<GameState, DurakError> for GameOver {
     fn new(state: GameState) -> Result<GameOver, DurakError> {
         Ok(GameOver { state })
     }
-}
 
-impl From<GamePlay> for GameOver {
-    fn from(value: GamePlay) -> Self {
-        GameOver { state: value.state }
+    fn take_state(self) -> GameState
+    where
+        Self: Sized,
+    {
+        self.state
     }
 }
+
+impl SceneTransition<MainMenu, GameState, DurakError> for GameOver {}

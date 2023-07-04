@@ -64,9 +64,24 @@ where
     {
         Ok(Box::new(Self::new(state)?))
     }
+
+    fn take_state(self) -> T
+    where
+        Self: Sized;
 }
 
 #[derive(Debug)]
 pub enum SceneError {
     SceneMissing,
+}
+
+pub trait SceneTransition<U, T, E>
+where
+    Self: Scene<T, E> + Sized,
+    U: Scene<T, E>,
+    E: Debug,
+{
+    fn transition(self) -> Result<U, E> {
+        U::new(self.take_state())
+    }
 }
