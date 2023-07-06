@@ -3,18 +3,18 @@ use std::fmt::Debug;
 use ggegui::Gui;
 use ggez::Context;
 
-pub struct SceneWrapper<T, E>
+pub struct SceneWrapper<S, E>
 where
     E: From<SceneError> + Debug,
 {
-    scene: Option<Box<dyn Scene<T, E>>>,
+    scene: Option<Box<dyn Scene<State = S, Error = E>>>,
 }
 
-impl<T, E> SceneWrapper<T, E>
+impl<S, E> SceneWrapper<S, E>
 where
     E: From<SceneError> + Debug,
 {
-    pub fn new(scene: Box<dyn Scene<T, E>>) -> Self {
+    pub fn new(scene: Box<dyn Scene<State = S, Error = E>>) -> Self {
         SceneWrapper { scene: Some(scene) }
     }
     pub fn update(&mut self, gui: &mut Gui, ctx: &mut ggez::Context) -> Result<(), E> {
@@ -42,30 +42,29 @@ where
     }
 }
 
-pub trait Scene<T, E>
-where
-    E: Debug,
-{
+pub trait Scene {
+    type State;
+    type Error;
     fn update(
         self: Box<Self>,
         gui: &mut Gui,
         _ctx: &mut Context,
-    ) -> Result<Box<dyn Scene<T, E>>, E>;
-    fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), E>;
-    fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), E> {
+    ) -> Result<Box<dyn Scene<State = Self::State, Error = Self::Error>>, Self::Error>;
+    fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), Self::Error>;
+    fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), Self::Error> {
         Ok(())
     }
-    fn new(state: T) -> Result<Self, E>
+    fn new(state: Self::State) -> Result<Self, Self::Error>
     where
         Self: Sized;
-    fn new_boxed(state: T) -> Result<Box<Self>, E>
+    fn new_boxed(state: Self::State) -> Result<Box<Self>, Self::Error>
     where
         Self: Sized,
     {
         Ok(Box::new(Self::new(state)?))
     }
 
-    fn take_state(self) -> T
+    fn take_state(self) -> Self::State
     where
         Self: Sized;
 }
@@ -75,13 +74,12 @@ pub enum SceneError {
     SceneMissing,
 }
 
-pub trait SceneTransition<U, T, E>
+pub trait SceneTransition<U, S>
 where
-    Self: Scene<T, E> + Sized,
-    U: Scene<T, E>,
-    E: Debug,
+    Self: Scene<State = S> + Sized,
+    U: Scene<State = S>,
 {
-    fn transition(self) -> Result<U, E> {
+    fn transition(self) -> Result<U, U::Error> {
         U::new(self.take_state())
     }
 }

@@ -10,24 +10,38 @@ use ggez::{
 use crate::{
     deck::Deck,
     error::DurakError,
-    game::GameState,
+    game::DurakState,
     hand::Hand,
     player::Player,
     scenes::{Scene, SceneTransition},
     storage,
 };
 
+pub trait DurakSceneTransition<U: Scene<State = DurakState, Error = DurakError>>:
+    SceneTransition<U, DurakState>
+{
+}
+impl<S, U> SceneTransition<U, DurakState> for S
+where
+    S: Scene<State = DurakState, Error = DurakError> + DurakSceneTransition<U>,
+    U: Scene<State = DurakState, Error = DurakError>,
+{
+}
+
 pub struct MainMenu {
-    state: GameState,
+    state: DurakState,
     no_of_players: usize,
 }
 
-impl Scene<GameState, DurakError> for MainMenu {
+impl Scene for MainMenu {
+    type State = DurakState;
+    type Error = DurakError;
+
     fn update(
         mut self: Box<Self>,
         gui: &mut Gui,
         ctx: &mut Context,
-    ) -> Result<Box<dyn Scene<GameState, DurakError>>, DurakError> {
+    ) -> Result<Box<dyn Scene<State = Self::State, Error = Self::Error>>, DurakError> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label("Main Menu");
@@ -79,14 +93,14 @@ impl Scene<GameState, DurakError> for MainMenu {
         Ok(())
     }
 
-    fn new(state: GameState) -> Result<MainMenu, DurakError> {
+    fn new(state: DurakState) -> Result<MainMenu, DurakError> {
         Ok(MainMenu {
             no_of_players: state.players.len(),
             state,
         })
     }
 
-    fn take_state(self) -> GameState
+    fn take_state(self) -> DurakState
     where
         Self: Sized,
     {
@@ -94,18 +108,21 @@ impl Scene<GameState, DurakError> for MainMenu {
     }
 }
 
-impl SceneTransition<GamePlay, GameState, DurakError> for MainMenu {}
+impl DurakSceneTransition<GamePlay> for MainMenu {}
 
 pub struct GamePlay {
-    state: GameState,
+    state: DurakState,
 }
 
-impl Scene<GameState, DurakError> for GamePlay {
+impl Scene for GamePlay {
+    type State = DurakState;
+
+    type Error = DurakError;
     fn update(
         mut self: Box<Self>,
         gui: &mut Gui,
         ctx: &mut Context,
-    ) -> Result<Box<dyn Scene<GameState, DurakError>>, DurakError> {
+    ) -> Result<Box<dyn Scene<State = Self::State, Error = Self::Error>>, DurakError> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label(format!("{} times played", &self.state.times_played));
@@ -115,7 +132,7 @@ impl Scene<GameState, DurakError> for GamePlay {
         gui.update(ctx);
         if next {
             self.state.times_played += 1;
-            let result = <Self as SceneTransition<GameOver, GameState, DurakError>>::transition(*self)?;
+            let result = <Self as SceneTransition<GameOver, DurakState>>::transition(*self)?;
             return Ok(Box::new(result));
         }
         Ok(self)
@@ -142,7 +159,7 @@ impl Scene<GameState, DurakError> for GamePlay {
         Ok(())
     }
 
-    fn new(mut state: GameState) -> Result<GamePlay, DurakError> {
+    fn new(mut state: DurakState) -> Result<GamePlay, DurakError> {
         let image = storage::card_image()?.ok_or("Cannot load card image")?;
 
         state.deck = Some(Deck::new(&image)?);
@@ -161,26 +178,29 @@ impl Scene<GameState, DurakError> for GamePlay {
         Ok(result)
     }
 
-    fn take_state(self) -> GameState
+    fn take_state(self) -> DurakState
     where
         Self: Sized,
     {
         self.state
     }
 }
-impl SceneTransition<GameOver, GameState, DurakError> for GamePlay {}
-impl SceneTransition<MainMenu, GameState, DurakError> for GamePlay {}
+impl SceneTransition<GameOver, DurakState> for GamePlay {}
+impl SceneTransition<MainMenu, DurakState> for GamePlay {}
 
 pub struct GameOver {
-    state: GameState,
+    state: DurakState,
 }
 
-impl Scene<GameState, DurakError> for GameOver {
+impl Scene for GameOver {
+    type State = DurakState;
+
+    type Error = DurakError;
     fn update(
         self: Box<Self>,
         gui: &mut Gui,
         ctx: &mut Context,
-    ) -> Result<Box<dyn Scene<GameState, DurakError>>, DurakError> {
+    ) -> Result<Box<dyn Scene<State = Self::State, Error = Self::Error>>, DurakError> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label("Game Over");
@@ -206,11 +226,11 @@ impl Scene<GameState, DurakError> for GameOver {
         Ok(())
     }
 
-    fn new(state: GameState) -> Result<GameOver, DurakError> {
+    fn new(state: DurakState) -> Result<GameOver, DurakError> {
         Ok(GameOver { state })
     }
 
-    fn take_state(self) -> GameState
+    fn take_state(self) -> DurakState
     where
         Self: Sized,
     {
@@ -218,4 +238,4 @@ impl Scene<GameState, DurakError> for GameOver {
     }
 }
 
-impl SceneTransition<MainMenu, GameState, DurakError> for GameOver {}
+impl SceneTransition<MainMenu, DurakState> for GameOver {}

@@ -12,26 +12,26 @@ use crate::{
     scenes::{Scene, SceneError, SceneWrapper},
 };
 
-pub struct GameState {
+pub struct DurakState {
     pub times_played: u32,
     pub players: Vec<Player>,
     pub deck: Option<Deck>,
     pub gui: Gui,
 }
 
-impl GameState {
+impl DurakState {
     pub fn new(ctx: &Context) -> Result<Self, DurakError> {
         Ok(Self {
             times_played: 0,
             players: vec![
                 Player {
                     name: String::new(),
-                    hand: Hand ::new(),
+                    hand: Hand::new(),
                     human: true,
                 },
                 Player {
                     name: String::from("Opponent"),
-                    hand: Hand ::new(),
+                    hand: Hand::new(),
                     human: false,
                 },
             ],
@@ -49,12 +49,12 @@ where
     gui: Gui,
 }
 
-impl Game<GameState, DurakError> {
+impl Game<DurakState, DurakError> {
     pub fn new(ctx: &mut Context) -> GameResult<Self> {
         ctx.gfx
             .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
 
-        let state = GameState::new(ctx)?;
+        let state = DurakState::new(ctx)?;
         let scene = MainMenu::new_boxed(state)?;
         Ok(Game {
             scene: SceneWrapper::new(scene),
