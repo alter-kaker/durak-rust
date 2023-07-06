@@ -13,7 +13,7 @@ use crate::{
     game::DurakState,
     hand::Hand,
     player::Player,
-    scenes::{Scene, SceneTransition},
+    scenes::{Scene, SceneTransition, SceneResult},
     storage,
 };
 
@@ -41,7 +41,7 @@ impl Scene for MainMenu {
         mut self: Box<Self>,
         gui: &mut Gui,
         ctx: &mut Context,
-    ) -> Result<Box<dyn Scene<State = Self::State, Error = Self::Error>>, DurakError> {
+    ) -> SceneResult<Self> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label("Main Menu");
@@ -122,7 +122,7 @@ impl Scene for GamePlay {
         mut self: Box<Self>,
         gui: &mut Gui,
         ctx: &mut Context,
-    ) -> Result<Box<dyn Scene<State = Self::State, Error = Self::Error>>, DurakError> {
+    ) -> SceneResult<Self> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label(format!("{} times played", &self.state.times_played));
@@ -200,7 +200,7 @@ impl Scene for GameOver {
         self: Box<Self>,
         gui: &mut Gui,
         ctx: &mut Context,
-    ) -> Result<Box<dyn Scene<State = Self::State, Error = Self::Error>>, DurakError> {
+    ) -> SceneResult<Self> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label("Game Over");

@@ -3,6 +3,8 @@ use std::fmt::Debug;
 use ggegui::Gui;
 use ggez::Context;
 
+pub type SceneResult<S> = Result<Box<dyn Scene<State = <S as Scene>::State, Error = <S as Scene>::Error>>, <S as Scene>::Error>;
+
 pub struct SceneWrapper<S, E>
 where
     E: From<SceneError> + Debug,
@@ -49,7 +51,7 @@ pub trait Scene {
         self: Box<Self>,
         gui: &mut Gui,
         _ctx: &mut Context,
-    ) -> Result<Box<dyn Scene<State = Self::State, Error = Self::Error>>, Self::Error>;
+    ) -> SceneResult<Self>;
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), Self::Error>;
     fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), Self::Error> {
         Ok(())
