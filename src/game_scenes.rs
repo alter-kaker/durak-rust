@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use ggegui::{egui::Area, Gui};
 use ggez::{
     glam::vec2,
@@ -13,7 +11,7 @@ use crate::{
     game::DurakState,
     hand::Hand,
     player::Player,
-    scenes::{Scene, SceneTransition, SceneResult},
+    scenes::{Scene, SceneResult, SceneTransition},
     storage,
 };
 
@@ -37,11 +35,7 @@ impl Scene for MainMenu {
     type State = DurakState;
     type Error = DurakError;
 
-    fn update(
-        mut self: Box<Self>,
-        gui: &mut Gui,
-        ctx: &mut Context,
-    ) -> SceneResult<Self> {
+    fn update(mut self: Box<Self>, gui: &mut Gui, ctx: &mut Context) -> SceneResult<Self> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label("Main Menu");
@@ -118,11 +112,7 @@ impl Scene for GamePlay {
     type State = DurakState;
 
     type Error = DurakError;
-    fn update(
-        mut self: Box<Self>,
-        gui: &mut Gui,
-        ctx: &mut Context,
-    ) -> SceneResult<Self> {
+    fn update(mut self: Box<Self>, gui: &mut Gui, ctx: &mut Context) -> SceneResult<Self> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label(format!("{} times played", &self.state.times_played));
@@ -162,18 +152,17 @@ impl Scene for GamePlay {
     fn new(mut state: DurakState) -> Result<GamePlay, DurakError> {
         let image = storage::card_image()?.ok_or("Cannot load card image")?;
 
-        state.deck = Some(Deck::new(&image)?);
+        let mut deck = Deck::new(&image)?;
+        deck.shuffle();
+
         for _ in 0..7 {
             for player in &mut state.players {
-                let card = state
-                    .deck
-                    .as_mut()
-                    .ok_or(DurakError::from("Deck Error"))?
-                    .pop()
-                    .ok_or(DurakError::from("Insufficient Cards"))?;
+                let card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
                 player.hand.insert(card);
             }
         }
+
+        state.deck = Some(deck);
         let result = GamePlay { state };
         Ok(result)
     }
@@ -196,11 +185,7 @@ impl Scene for GameOver {
     type State = DurakState;
 
     type Error = DurakError;
-    fn update(
-        self: Box<Self>,
-        gui: &mut Gui,
-        ctx: &mut Context,
-    ) -> SceneResult<Self> {
+    fn update(self: Box<Self>, gui: &mut Gui, ctx: &mut Context) -> SceneResult<Self> {
         let next = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label("Game Over");

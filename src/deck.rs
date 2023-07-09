@@ -18,11 +18,9 @@ impl Deck {
     pub fn new(image: &Image) -> Result<Self, DurakError> {
         let mut cards = CardFactory::new(image.clone()).get_deck();
 
-        shuffle(&mut cards);
-
         let kozyr = cards.get_index(0).unwrap().suit();
 
-        Ok(Deck {  kozyr, cards })
+        Ok(Deck { kozyr, cards })
     }
 
     pub fn cards(&self) -> &Cards {
@@ -32,16 +30,15 @@ impl Deck {
     pub fn pop(&mut self) -> Option<Card> {
         self.cards.pop()
     }
-}
 
-fn shuffle(cards: &mut Cards) {
-    let len = cards.len();
-    for i in 0..len {
-        let r = i + thread_rng().gen_range(0..(len - i));
-        cards.swap(i, r);
+    pub fn shuffle(&mut self) {
+        let len = self.cards.len();
+        for i in 0..len {
+            let r = i + thread_rng().gen_range(0..(len - i));
+            self.cards.swap(i, r);
+        }
     }
 }
-
 impl Drawable for Deck {
     fn draw(&self, canvas: &mut ggez::graphics::Canvas, param: impl Into<DrawParam>) {
         let param: DrawParam = param.into();
