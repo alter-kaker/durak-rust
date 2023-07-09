@@ -130,12 +130,12 @@ impl Scene for GamePlay {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
-        for (i, player) in self.state.players.iter().enumerate() {
-            canvas.draw(
-                &player.hand,
-                DrawParam::new().dest(vec2(100., 100. * (i + 1) as f32)),
-            );
-        }
+        // for (i, player) in self.state.players.iter().enumerate() {
+        //     canvas.draw(
+        //         &player.hand,
+        //         DrawParam::new().dest(vec2(100., 100. * (i + 1) as f32)),
+        //     );
+        // }
         if let Some(deck) = &self.state.deck {
             canvas.draw(deck, DrawParam::new());
         }

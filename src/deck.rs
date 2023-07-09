@@ -44,9 +44,20 @@ impl Drawable for Deck {
         let param: DrawParam = param.into();
         if let Transform::Values { dest, .. } = param.transform {
             let dest: Vec2 = dest.into();
-            for (i, card) in self.cards.iter().enumerate() {
-                let card_dest = dest + vec2(15. * i as f32, 0.);
-                card.draw(canvas, param.dest(card_dest))
+            let mut cards_iter = self.cards.iter().rev();
+            if let Some(first_card) = cards_iter.next() {
+                first_card.draw(
+                    canvas,
+                    param
+                        .dest(dest + vec2(CARD_HEIGHT, 0.))
+                        .rotation(90.0_f32.to_radians())
+                        // .offset(vec2(0.5, (CARD_WIDTH / 2.) / CARD_HEIGHT)),
+                )
+            };
+            let dest = dest + vec2(CARD_HEIGHT - CARD_WIDTH, 0.);
+            for (i, card) in cards_iter.enumerate() {
+                let dest = dest + vec2(2. * i as f32, 0.);
+                card.draw(canvas, param.dest(dest))
             }
         }
     }

@@ -1,6 +1,9 @@
 use std::hash::Hash;
 
-use ggez::graphics::{Drawable, Image, Rect};
+use ggez::{
+    glam::vec2,
+    graphics::{DrawParam, Drawable, Image, Rect},
+};
 use indexmap::{set::Iter, IndexSet};
 
 use crate::sprite::Sprite;
