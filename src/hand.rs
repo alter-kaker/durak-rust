@@ -61,9 +61,20 @@ impl Drawable for Hand {
         let param: DrawParam = param.into();
         if let Transform::Values { dest, .. } = param.transform {
             let dest: Vec2 = dest.into();
+            let total = 1.;
+            let step = total / (self.cards.len() - 1) as f32;
+            let gap = step.sin() * CARD_HEIGHT;
+            let shift = gap.max(12. - gap);
             for (i, card) in self.cards.iter().enumerate() {
-                let card_dest = dest + vec2(15. * i as f32, 0.);
-                card.draw(canvas, param.dest(card_dest))
+                let i = i as f32;
+                let card_dest = dest + vec2(shift * i, 0.);
+                card.draw(
+                    canvas,
+                    param
+                        .dest(card_dest + vec2(CARD_WIDTH / 2., CARD_HEIGHT))
+                        .offset(vec2(0.5, 1.))
+                        .rotation((i * step) - (total / 2.)),
+                )
             }
         }
     }
