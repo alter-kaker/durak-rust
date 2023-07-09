@@ -44,7 +44,7 @@ impl Drawable for Deck {
         let param: DrawParam = param.into();
         if let Transform::Values { dest, .. } = param.transform {
             let dest: Vec2 = dest.into();
-            let mut cards_iter = self.cards.iter().rev();
+            let mut cards_iter = self.cards.iter();
             if let Some(first_card) = cards_iter.next() {
                 first_card.draw(
                     canvas,
