@@ -113,13 +113,18 @@ impl Scene for GamePlay {
 
     type Error = DurakError;
     fn update(mut self: Box<Self>, gui: &mut Gui, ctx: &mut Context) -> SceneResult<Self> {
-        let next = Area::new("id")
+        let (next, pop_card) = Area::new("id")
             .show(&gui.ctx(), |ui| {
                 ui.label(format!("{} times played", &self.state.times_played));
-                ui.button("Next").clicked()
+                (ui.button("Next").clicked(), ui.button("pop").clicked())
             })
             .inner;
         gui.update(ctx);
+        if pop_card {
+            if let Some(card) = self.state.deck.as_mut().unwrap().pop() {
+                self.state.players[0].hand.insert(card);
+            }
+        }
         if next {
             self.state.times_played += 1;
             let result = <Self as SceneTransition<GameOver, DurakState>>::transition(*self)?;
@@ -130,12 +135,12 @@ impl Scene for GamePlay {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
-        // for (i, player) in self.state.players.iter().enumerate() {
-        //     canvas.draw(
-        //         &player.hand,
-        //         DrawParam::new().dest(vec2(100., 100. * (i + 1) as f32)),
-        //     );
-        // }
+        for (i, player) in self.state.players.iter().enumerate() {
+            canvas.draw(
+                &player.hand,
+                DrawParam::new().dest(vec2(100., 100. * (i + 1) as f32)),
+            );
+        }
         if let Some(deck) = &self.state.deck {
             canvas.draw(deck, DrawParam::new());
         }
