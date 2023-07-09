@@ -87,7 +87,10 @@ impl Scene for MainMenu {
         Ok(())
     }
 
-    fn new(state: DurakState) -> Result<MainMenu, DurakError> {
+    fn new(mut state: DurakState) -> Result<MainMenu, DurakError> {
+        for player in &mut state.players {
+            player.hand.empty();
+        }
         Ok(MainMenu {
             no_of_players: state.players.len(),
             state,

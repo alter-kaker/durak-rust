@@ -50,6 +50,10 @@ impl Hand {
     pub fn take(&mut self, card: &Card) -> Option<Card> {
         self.cards.take(card)
     }
+
+    pub fn empty(&mut self) {
+        self.cards = Cards::new();
+    }
 }
 
 impl Drawable for Hand {
