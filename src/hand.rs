@@ -66,26 +66,22 @@ impl Drawable for Hand {
     ) {
         let param: DrawParam = param.into();
         if let Transform::Values { dest, rotation, .. } = param.transform {
+            let cards_len = self.cards.len() as f32;
             let dest: Vec2 = dest.into();
 
-            let total_angle = (8. * self.cards.len() as f32)
+            let total_angle = (8. * cards_len)
                 .min(90.)
                 .max(45.)
                 .to_radians();
-            let step_angle = total_angle / self.cards.len() as f32;
-
-            let radius_len = 0. - (180_f32.to_radians() * 7.) / (PI * step_angle);
-
-            let radius = vec2(0., radius_len);
-
+            let step_angle = total_angle / cards_len;
+            let radius = vec2(0., 0. - (180_f32.to_radians() * 7.) / (PI * step_angle));
             let rotation_vec = Vec2::from_angle(rotation);
 
             for (i, card) in self.cards.iter().enumerate() {
-                let card_angle = step_angle * i as f32 - (total_angle / 2.) + rotation;
+                let card_angle = (step_angle * i as f32) - (total_angle / 2.) + rotation;
                 let card_angle_vec = Vec2::from_angle(card_angle);
 
-                let card_dest = dest + card_angle_vec.rotate(radius)
-                    - rotation_vec.rotate(radius);
+                let card_dest = dest + card_angle_vec.rotate(radius) - rotation_vec.rotate(radius);
                 card.draw(
                     canvas,
                     param
