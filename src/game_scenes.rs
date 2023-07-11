@@ -147,9 +147,9 @@ impl Scene for GamePlay {
             canvas.draw(&circle, DrawParam::new().dest(dest));
         }
 
-        // if let Some(deck) = &self.state.deck {
-        //     canvas.draw(deck, DrawParam::new());
-        // }
+        if let Some(deck) = &self.state.deck {
+            canvas.draw(deck, DrawParam::new());
+        }
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
 
