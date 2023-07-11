@@ -1,7 +1,7 @@
 use ggegui::{egui::Area, Gui};
 use ggez::{
-    glam::vec2,
-    graphics::{Canvas, Color, DrawParam, Drawable},
+    glam::{vec2, Vec2},
+    graphics::{Canvas, Color, DrawMode, DrawParam, Drawable, Mesh},
     Context,
 };
 
@@ -138,15 +138,18 @@ impl Scene for GamePlay {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
+        let rotation_step =  (360. / self.state.players.len() as f32).to_radians();
         for (i, player) in self.state.players.iter().enumerate() {
-            canvas.draw(
-                &player.hand,
-                DrawParam::new().dest(vec2(100., 100. * (i + 1) as f32)),
-            );
+            let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
+            let dest = vec2(120. + (120. * (i + 1) as f32), 120.);
+            let rotation = rotation_step * i as f32;
+            canvas.draw(&player.hand, DrawParam::new().rotation(rotation).dest(dest));
+            canvas.draw(&circle, DrawParam::new().dest(dest));
         }
-        if let Some(deck) = &self.state.deck {
-            canvas.draw(deck, DrawParam::new());
-        }
+
+        // if let Some(deck) = &self.state.deck {
+        //     canvas.draw(deck, DrawParam::new());
+        // }
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
 

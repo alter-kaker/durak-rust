@@ -1,6 +1,8 @@
+use std::f32::consts::PI;
+
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::{DrawParam, Drawable, Transform},
+    graphics::{DrawParam, Drawable, Mesh, Transform},
 };
 
 use crate::card::{Card, Cards, CARD_HEIGHT, CARD_WIDTH};
@@ -63,21 +65,33 @@ impl Drawable for Hand {
         param: impl Into<ggez::graphics::DrawParam>,
     ) {
         let param: DrawParam = param.into();
-        if let Transform::Values { dest, .. } = param.transform {
+        if let Transform::Values { dest, rotation, .. } = param.transform {
             let dest: Vec2 = dest.into();
-            let total = 1.;
-            let step = total / (self.cards.len() - 1) as f32;
-            let gap = step.sin() * CARD_HEIGHT;
-            let shift = gap.max(12. - gap);
+
+            let total_angle = (8. * self.cards.len() as f32)
+                .min(90.)
+                .max(45.)
+                .to_radians();
+            let step_angle = total_angle / self.cards.len() as f32;
+
+            let radius_len = 0. - (180_f32.to_radians() * 7.) / (PI * step_angle);
+
+            let radius = vec2(0., radius_len);
+
+            let rotation_vec = Vec2::from_angle(rotation);
+
             for (i, card) in self.cards.iter().enumerate() {
-                let i = i as f32;
-                let card_dest = dest + vec2(shift * i, 0.);
+                let card_angle = step_angle * i as f32 - (total_angle / 2.) + rotation;
+                let card_angle_vec = Vec2::from_angle(card_angle);
+
+                let card_dest = dest + card_angle_vec.rotate(radius)
+                    - rotation_vec.rotate(radius);
                 card.draw(
                     canvas,
                     param
-                        .dest(card_dest + vec2(CARD_WIDTH / 2., CARD_HEIGHT))
                         .offset(vec2(0.5, 1.))
-                        .rotation((i * step) - (total / 2.)),
+                        .dest(card_dest)
+                        .rotation(card_angle),
                 )
             }
         }
