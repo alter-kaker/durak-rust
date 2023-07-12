@@ -1,8 +1,7 @@
 use std::hash::Hash;
 
 use ggez::{
-    glam::vec2,
-    graphics::{DrawParam, Drawable, Image, Rect},
+    graphics::{ Drawable, Image, Rect},
 };
 use indexmap::{set::Iter, IndexSet};
 
@@ -15,16 +14,16 @@ pub const CARD_HEIGHT: f32 = 96.;
 pub struct Card {
     suit: Suit,
     rank: Rank,
-    sprite: Sprite,
+    front: Sprite,
     deck_id: usize,
 }
 
 impl Card {
-    pub fn new(suit: Suit, rank: Rank, sprite: Sprite, deck_id: usize) -> Self {
+    pub fn new(suit: Suit, rank: Rank, front: Sprite, deck_id: usize) -> Self {
         Card {
             suit,
             rank,
-            sprite,
+            front,
             deck_id,
         }
     }
@@ -35,6 +34,14 @@ impl Card {
 
     pub fn rank(&self) -> Rank {
         self.rank
+    }
+
+    pub fn draw_front(
+        &self,
+        canvas: &mut ggez::graphics::Canvas,
+        param: impl Into<ggez::graphics::DrawParam>,
+    ) {
+        canvas.draw(&self.front, param)
     }
 }
 
@@ -62,23 +69,7 @@ impl PartialOrd for Card {
             self.rank.partial_cmp(&other.rank)
         }
     }
-}
 
-impl Drawable for Card {
-    fn draw(
-        &self,
-        canvas: &mut ggez::graphics::Canvas,
-        param: impl Into<ggez::graphics::DrawParam>,
-    ) {
-        canvas.draw(&self.sprite, param)
-    }
-
-    fn dimensions(
-        &self,
-        gfx: &impl ggez::context::Has<ggez::graphics::GraphicsContext>,
-    ) -> Option<ggez::graphics::Rect> {
-        todo!()
-    }
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]

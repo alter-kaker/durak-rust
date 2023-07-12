@@ -46,7 +46,7 @@ impl Drawable for Deck {
             let dest: Vec2 = dest.into();
             let mut cards_iter = self.cards.iter();
             if let Some(first_card) = cards_iter.next() {
-                first_card.draw(
+                first_card.draw_front(
                     canvas,
                     param
                         .dest(dest + vec2(CARD_HEIGHT, 0.))
@@ -57,7 +57,7 @@ impl Drawable for Deck {
             let dest = dest + vec2(CARD_HEIGHT - CARD_WIDTH, 0.);
             for (i, card) in cards_iter.enumerate() {
                 let dest = dest + vec2(2. * i as f32, 0.);
-                card.draw(canvas, param.dest(dest))
+                card.draw_front(canvas, param.dest(dest))
             }
         }
     }

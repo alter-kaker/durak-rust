@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::{DrawParam, Drawable},
+    graphics::DrawParam,
 };
 
 use crate::card::{Card, Cards, CARD_HEIGHT, CARD_WIDTH};
@@ -83,7 +83,7 @@ impl Hand {
             let card_angle_vec = Vec2::from_angle(card_angle);
 
             let card_dest = pos + card_angle_vec.rotate(radius) - rotation_vec.rotate(radius);
-            card.draw(
+            card.draw_front(
                 canvas,
                 param
                     .offset(vec2(0.5, 1.))
