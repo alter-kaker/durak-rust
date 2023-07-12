@@ -1,8 +1,6 @@
 use std::hash::Hash;
 
-use ggez::{
-    graphics::{ Drawable, Image, Rect},
-};
+use ggez::graphics::{Image, Rect};
 use indexmap::{set::Iter, IndexSet};
 
 use crate::sprite::Sprite;
@@ -15,15 +13,17 @@ pub struct Card {
     suit: Suit,
     rank: Rank,
     front: Sprite,
+    back: Sprite,
     deck_id: usize,
 }
 
 impl Card {
-    pub fn new(suit: Suit, rank: Rank, front: Sprite, deck_id: usize) -> Self {
+    pub fn new(suit: Suit, rank: Rank, front: Sprite, back: Sprite, deck_id: usize) -> Self {
         Card {
             suit,
             rank,
             front,
+            back,
             deck_id,
         }
     }
@@ -42,6 +42,14 @@ impl Card {
         param: impl Into<ggez::graphics::DrawParam>,
     ) {
         canvas.draw(&self.front, param)
+    }
+
+    pub fn draw_back(
+        &self,
+        canvas: &mut ggez::graphics::Canvas,
+        param: impl Into<ggez::graphics::DrawParam>,
+    ) {
+        canvas.draw(&self.back, param)
     }
 }
 
@@ -69,7 +77,6 @@ impl PartialOrd for Card {
             self.rank.partial_cmp(&other.rank)
         }
     }
-
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
@@ -172,20 +179,30 @@ impl CardFactory {
 
     pub fn get_deck(&mut self) -> Cards {
         let w = 1. / 9.;
-        let h = 1. / 4.;
+        let h = 1. / 5.;
 
         let deck_i = self.decks_made;
-        self.decks_made += 1;
 
         let suit_range = 0..4;
         let rank_range = 0..9;
+        let back = {
+            let x = w * self.decks_made as f32;
+            let y = h * 4.0;
+            let src = Rect { x, y, w, h };
+            Sprite {
+                src,
+                image: self.image.clone(),
+            }
+        };
 
+        self.decks_made += 1;
         suit_range
             .flat_map({
                 |i| {
                     let image = self.image.clone();
+                    let back = back.clone();
                     rank_range.clone().map(move |j| {
-                        let closure = |j| {
+                        let closure = |j, back| {
                             let suit = match i {
                                 0 => Suit::Hearts,
                                 1 => Suit::Spades,
@@ -206,13 +223,13 @@ impl CardFactory {
                             let x = w * j as f32;
                             let y = h * i as f32;
                             let src = Rect { x, y, w, h };
-                            let sprite = Sprite {
+                            let front = Sprite {
                                 src,
                                 image: image.clone(),
                             };
-                            Card::new(suit, rank, sprite, deck_i)
+                            Card::new(suit, rank, front, back, deck_i)
                         };
-                        closure(j)
+                        closure(j, back.clone())
                     })
                 }
             })

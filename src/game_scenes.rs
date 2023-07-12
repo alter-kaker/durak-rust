@@ -141,7 +141,11 @@ impl Scene for GamePlay {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
         for player in self.state.players.iter() {
             let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
-            player.hand.draw(&mut canvas);
+            if player.human {
+                player.hand.draw_front(&mut canvas);
+            } else {
+                player.hand.draw_back(&mut canvas);
+            }
             canvas.draw(
                 &circle,
                 DrawParam::new().dest(player.hand.get_pos().unwrap_or_default()),

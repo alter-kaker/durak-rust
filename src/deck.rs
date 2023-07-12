@@ -51,13 +51,12 @@ impl Drawable for Deck {
                     param
                         .dest(dest + vec2(CARD_HEIGHT, 0.))
                         .rotation(90.0_f32.to_radians())
-                        // .offset(vec2(0.5, (CARD_WIDTH / 2.) / CARD_HEIGHT)),
                 )
             };
             let dest = dest + vec2(CARD_HEIGHT - CARD_WIDTH, 0.);
             for (i, card) in cards_iter.enumerate() {
                 let dest = dest + vec2(2. * i as f32, 0.);
-                card.draw_front(canvas, param.dest(dest))
+                card.draw_back(canvas, param.dest(dest))
             }
         }
     }
