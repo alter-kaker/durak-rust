@@ -56,14 +56,14 @@ pub trait Scene {
     fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), Self::Error> {
         Ok(())
     }
-    fn new(state: Self::State) -> Result<Self, Self::Error>
+    fn new(state: Self::State, ctx: &Context) -> Result<Self, Self::Error>
     where
         Self: Sized;
-    fn new_boxed(state: Self::State) -> Result<Box<Self>, Self::Error>
+    fn new_boxed(state: Self::State, ctx: &Context) -> Result<Box<Self>, Self::Error>
     where
         Self: Sized,
     {
-        Ok(Box::new(Self::new(state)?))
+        Ok(Box::new(Self::new(state, ctx)?))
     }
 
     fn take_state(self) -> Self::State
@@ -81,7 +81,7 @@ where
     Self: Scene<State = S> + Sized,
     U: Scene<State = S>,
 {
-    fn transition(self) -> Result<U, U::Error> {
-        U::new(self.take_state())
+    fn transition(self, ctx: &Context) -> Result<U, U::Error> {
+        U::new(self.take_state(), ctx)
     }
 }

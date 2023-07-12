@@ -72,7 +72,7 @@ impl Scene for MainMenu {
                 .any(|player| player.name.is_empty())
         {
             self.state.players.truncate(self.no_of_players);
-            let result = self.transition()?;
+            let result = self.transition(ctx)?;
             return Ok(Box::new(result));
         }
 
@@ -88,7 +88,7 @@ impl Scene for MainMenu {
         Ok(())
     }
 
-    fn new(mut state: DurakState) -> Result<MainMenu, DurakError> {
+    fn new(mut state: DurakState, _ctx: &Context) -> Result<MainMenu, DurakError> {
         for player in &mut state.players {
             player.hand.empty();
         }
@@ -131,7 +131,7 @@ impl Scene for GamePlay {
         }
         if next {
             self.state.times_played += 1;
-            let result = <Self as SceneTransition<GameOver, DurakState>>::transition(*self)?;
+            let result = <Self as SceneTransition<GameOver, DurakState>>::transition(*self, ctx)?;
             return Ok(Box::new(result));
         }
         Ok(self)
@@ -139,17 +139,13 @@ impl Scene for GamePlay {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
-        let rotation_step = (360. / self.state.players.len() as f32).to_radians();
-        for (i, player) in self.state.players.iter().enumerate() {
+        for player in self.state.players.iter() {
             let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
-            let rotation = rotation_step * i as f32;
-            let PhysicalSize { height, width, .. } = ctx.gfx.window().inner_size();
-            let table_size = (height.min(width) / 2) as f32;
-            let radius = vec2(0., table_size * 3. / 4.);
-            let center = vec2(table_size, table_size);
-            let dest = center + Vec2::from_angle(rotation).rotate(radius);
-            canvas.draw(&player.hand, DrawParam::new().rotation(rotation).dest(dest));
-            canvas.draw(&circle, DrawParam::new().dest(dest));
+            player.hand.draw(&mut canvas);
+            canvas.draw(
+                &circle,
+                DrawParam::new().dest(player.hand.get_pos().unwrap_or_default()),
+            );
         }
 
         if let Some(deck) = &self.state.deck {
@@ -161,11 +157,11 @@ impl Scene for GamePlay {
         Ok(())
     }
 
-    fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), DurakError> {
+    fn mouse_motion_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), DurakError> {
         Ok(())
     }
 
-    fn new(mut state: DurakState) -> Result<GamePlay, DurakError> {
+    fn new(mut state: DurakState, ctx: &Context) -> Result<GamePlay, DurakError> {
         let image = storage::card_image()?.ok_or("Cannot load card image")?;
 
         let mut deck = Deck::new(&image)?;
@@ -176,6 +172,20 @@ impl Scene for GamePlay {
                 let card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
                 player.hand.insert(card);
             }
+        }
+
+        let rotation_step = (360. / state.players.len() as f32).to_radians();
+
+        for (i, player) in state.players.iter_mut().enumerate() {
+            let rotation = rotation_step * i as f32;
+            let PhysicalSize { height, width, .. } = ctx.gfx.window().inner_size();
+            let table_size = (height.min(width) / 2) as f32;
+            let radius = vec2(0., table_size * 3. / 4.);
+            let center = vec2(table_size, table_size);
+            let pos = center + Vec2::from_angle(rotation).rotate(radius);
+
+            player.hand.set_pos(pos);
+            player.hand.set_rotation(rotation);
         }
 
         state.deck = Some(deck);
@@ -211,7 +221,7 @@ impl Scene for GameOver {
             .inner;
         gui.update(ctx);
         if next {
-            let result = self.transition()?;
+            let result = self.transition(ctx)?;
             return Ok(Box::new(result));
         }
 
@@ -227,7 +237,7 @@ impl Scene for GameOver {
         Ok(())
     }
 
-    fn new(state: DurakState) -> Result<GameOver, DurakError> {
+    fn new(state: DurakState, _ctx: &Context) -> Result<GameOver, DurakError> {
         Ok(GameOver { state })
     }
 

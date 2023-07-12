@@ -55,7 +55,7 @@ impl Game<DurakState, DurakError> {
             .add_font("IBM_CGA", FontData::from_path(ctx, "/Px437_IBM_CGA.ttf")?);
 
         let state = DurakState::new(ctx)?;
-        let scene = MainMenu::new_boxed(state)?;
+        let scene = MainMenu::new_boxed(state, ctx)?;
         Ok(Game {
             scene: SceneWrapper::new(scene),
             gui: Gui::new(ctx),

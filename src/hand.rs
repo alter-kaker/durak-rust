@@ -11,6 +11,7 @@ use crate::card::{Card, Cards, CARD_HEIGHT, CARD_WIDTH};
 pub struct Hand {
     cards: Cards,
     pos: Option<Vec2>,
+    rotation: Option<f32>,
 }
 
 impl Hand {
@@ -18,11 +19,20 @@ impl Hand {
         Hand {
             cards: Cards::new(),
             pos: None,
+            rotation: None,
         }
     }
 
     pub fn set_pos(&mut self, pos: Vec2) {
         self.pos = Some(pos)
+    }
+
+    pub fn get_pos(&self) -> Option<Vec2> {
+        self.pos
+    }
+
+    pub fn set_rotation(&mut self, rotation: f32) {
+        self.rotation = Some(rotation)
     }
 
     pub fn hover(&self, mouse_pos: Vec2) -> Option<&Card> {
@@ -56,47 +66,30 @@ impl Hand {
     pub fn empty(&mut self) {
         self.cards = Cards::new();
     }
-}
+    pub fn draw(&self, canvas: &mut ggez::graphics::Canvas) {
+        let pos = self.pos.unwrap_or_default();
+        let rotation = self.rotation.unwrap_or_default();
+        let param = DrawParam::new();
 
-impl Drawable for Hand {
-    fn draw(
-        &self,
-        canvas: &mut ggez::graphics::Canvas,
-        param: impl Into<ggez::graphics::DrawParam>,
-    ) {
-        let param: DrawParam = param.into();
-        if let Transform::Values { dest, rotation, .. } = param.transform {
-            let cards_len = self.cards.len() as f32;
-            let dest: Vec2 = dest.into();
+        let cards_len = self.cards.len() as f32;
 
-            let total_angle = (8. * cards_len)
-                .min(90.)
-                .max(45.)
-                .to_radians();
-            let step_angle = total_angle / cards_len;
-            let radius = vec2(0., 0. - (180_f32.to_radians() * 7.) / (PI * step_angle));
-            let rotation_vec = Vec2::from_angle(rotation);
+        let total_angle = (8. * cards_len).min(90.).max(45.).to_radians();
+        let step_angle = total_angle / cards_len;
+        let radius = vec2(0., 0. - (180_f32.to_radians() * 7.) / (PI * step_angle));
+        let rotation_vec = Vec2::from_angle(rotation);
 
-            for (i, card) in self.cards.iter().enumerate() {
-                let card_angle = (step_angle * i as f32) - (total_angle / 2.) + rotation;
-                let card_angle_vec = Vec2::from_angle(card_angle);
+        for (i, card) in self.cards.iter().enumerate() {
+            let card_angle = (step_angle * i as f32) - (total_angle / 2.) + rotation;
+            let card_angle_vec = Vec2::from_angle(card_angle);
 
-                let card_dest = dest + card_angle_vec.rotate(radius) - rotation_vec.rotate(radius);
-                card.draw(
-                    canvas,
-                    param
-                        .offset(vec2(0.5, 1.))
-                        .dest(card_dest)
-                        .rotation(card_angle),
-                )
-            }
+            let card_dest = pos + card_angle_vec.rotate(radius) - rotation_vec.rotate(radius);
+            card.draw(
+                canvas,
+                param
+                    .offset(vec2(0.5, 1.))
+                    .dest(card_dest)
+                    .rotation(card_angle),
+            )
         }
-    }
-
-    fn dimensions(
-        &self,
-        gfx: &impl ggez::context::Has<ggez::graphics::GraphicsContext>,
-    ) -> Option<ggez::graphics::Rect> {
-        todo!()
     }
 }
