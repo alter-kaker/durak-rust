@@ -2,6 +2,7 @@ use ggegui::{egui::Area, Gui};
 use ggez::{
     glam::{vec2, Vec2},
     graphics::{Canvas, Color, DrawMode, DrawParam, Drawable, Mesh},
+    winit::dpi::PhysicalSize,
     Context,
 };
 
@@ -138,11 +139,15 @@ impl Scene for GamePlay {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
-        let rotation_step =  (360. / self.state.players.len() as f32).to_radians();
+        let rotation_step = (360. / self.state.players.len() as f32).to_radians();
         for (i, player) in self.state.players.iter().enumerate() {
             let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
-            let dest = vec2(120. + (120. * (i + 1) as f32), 120.);
             let rotation = rotation_step * i as f32;
+            let PhysicalSize { height, width, .. } = ctx.gfx.window().inner_size();
+            let table_size = (height.min(width) / 2) as f32;
+            let radius = vec2(0., table_size * 3. / 4.);
+            let center = vec2(table_size, table_size);
+            let dest = center + Vec2::from_angle(rotation).rotate(radius);
             canvas.draw(&player.hand, DrawParam::new().rotation(rotation).dest(dest));
             canvas.draw(&circle, DrawParam::new().dest(dest));
         }
