@@ -64,7 +64,7 @@ impl Drawable for Deck {
 
     fn dimensions(
         &self,
-        gfx: &impl ggez::context::Has<ggez::graphics::GraphicsContext>,
+        _gfx: &impl ggez::context::Has<ggez::graphics::GraphicsContext>,
     ) -> Option<Rect> {
         Some(Rect {
             x: 0.,

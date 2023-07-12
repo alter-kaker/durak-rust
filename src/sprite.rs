@@ -13,7 +13,7 @@ impl Drawable for Sprite {
 
     fn dimensions(
         &self,
-        gfx: &impl ggez::context::Has<ggez::graphics::GraphicsContext>,
+        _gfx: &impl ggez::context::Has<ggez::graphics::GraphicsContext>,
     ) -> Option<ggez::graphics::Rect> {
         todo!()
     }
