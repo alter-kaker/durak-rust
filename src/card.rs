@@ -1,6 +1,9 @@
 use std::hash::Hash;
 
-use ggez::graphics::{Image, Rect};
+use ggez::{
+    glam::Vec2,
+    graphics::{Canvas, DrawParam, Image, Rect, Transform},
+};
 use indexmap::{set::Iter, IndexSet};
 
 use crate::sprite::Sprite;
@@ -15,6 +18,9 @@ pub struct Card {
     front: Sprite,
     back: Sprite,
     deck_id: usize,
+    position: Vec2,
+    rotation: f32,
+    show_front: bool,
 }
 
 impl Card {
@@ -25,7 +31,14 @@ impl Card {
             front,
             back,
             deck_id,
+            position: Vec2::ZERO,
+            rotation: 0.,
+            show_front: false,
         }
+    }
+
+    pub fn flip(&mut self) {
+        self.show_front = !self.show_front;
     }
 
     pub fn suit(&self) -> Suit {
@@ -36,19 +49,26 @@ impl Card {
         self.rank
     }
 
-    pub fn draw_front(
-        &self,
-        canvas: &mut ggez::graphics::Canvas,
-        param: impl Into<ggez::graphics::DrawParam>,
-    ) {
+    pub fn draw(&self, canvas: &mut Canvas, param: impl Into<DrawParam>) {
+        let mut card_dest = self.position;
+        let mut card_rotation = self.rotation;
+        if let Transform::Values { dest, rotation, .. } = Into::<DrawParam>::into(param).transform {
+            card_dest += Into::<Vec2>::into(dest);
+            card_rotation += rotation;
+        }
+        let card_param = DrawParam::new().dest(card_dest).rotation(card_rotation);
+        if self.show_front {
+            self.draw_front(canvas, card_param)
+        } else {
+            self.draw_back(canvas, card_param)
+        }
+    }
+
+    fn draw_front(&self, canvas: &mut Canvas, param: DrawParam) {
         canvas.draw(&self.front, param)
     }
 
-    pub fn draw_back(
-        &self,
-        canvas: &mut ggez::graphics::Canvas,
-        param: impl Into<ggez::graphics::DrawParam>,
-    ) {
+    fn draw_back(&self, canvas: &mut Canvas, param: DrawParam) {
         canvas.draw(&self.back, param)
     }
 }
@@ -133,6 +153,14 @@ impl Cards {
 
     pub fn iter(&self) -> Iter<'_, Card> {
         self.0.iter()
+    }
+
+    pub fn flip_index(&mut self, index: usize) {
+        if let Some(mut card) = self.0.swap_remove_index(index) {
+            card.flip();
+            let (end_idx, _) = self.0.insert_full(card);
+            self.0.swap_indices(index, end_idx);
+        }
     }
 }
 

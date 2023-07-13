@@ -96,15 +96,9 @@ impl Hand {
             .collect()
     }
 
-    pub fn draw_back(&self, canvas: &mut Canvas) {
+    pub fn draw(&self, canvas: &mut Canvas) {
         for (card, param) in self.card_params() {
-            card.draw_back(canvas, param)
-        }
-    }
-
-    pub fn draw_front(&self, canvas: &mut Canvas) {
-        for (card, param) in self.card_params() {
-            card.draw_front(canvas, param)
+            card.draw(canvas, param)
         }
     }
 }

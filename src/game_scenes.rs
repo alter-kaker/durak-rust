@@ -141,11 +141,8 @@ impl Scene for GamePlay {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
         for player in self.state.players.iter() {
             let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
-            if player.human {
-                player.hand.draw_front(&mut canvas);
-            } else {
-                player.hand.draw_back(&mut canvas);
-            }
+
+            player.hand.draw(&mut canvas);
             canvas.draw(
                 &circle,
                 DrawParam::new().dest(player.hand.get_pos().unwrap_or_default()),
@@ -173,7 +170,10 @@ impl Scene for GamePlay {
 
         for _ in 0..7 {
             for player in &mut state.players {
-                let card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
+                let mut card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
+                if player.human {
+                    card.flip();
+                }
                 player.hand.insert(card);
             }
         }
