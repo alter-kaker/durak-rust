@@ -2,10 +2,13 @@ use std::f32::consts::PI;
 
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::{Canvas},
+    graphics::Canvas,
 };
 
-use crate::card::{Card, Cards, CARD_HEIGHT, CARD_WIDTH};
+use crate::{
+    card::{Card, CARD_HEIGHT, CARD_WIDTH},
+    cards::Cards,
+};
 
 #[derive(Debug, Default)]
 pub struct Hand {
@@ -95,9 +98,7 @@ impl Hand {
 
     pub fn draw(&self, canvas: &mut Canvas) {
         for card in &self.cards {
-            card.draw(
-                canvas
-            )
+            card.draw(canvas)
         }
     }
 }

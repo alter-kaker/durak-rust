@@ -4,8 +4,9 @@ use ggez::{
 };
 use rand::{thread_rng, Rng};
 
+use crate::cards::Cards;
 use crate::{
-    card::{Card, CardFactory, Cards, Suit, CARD_HEIGHT, CARD_WIDTH},
+    card::{Card, CardFactory, Suit, CARD_HEIGHT, CARD_WIDTH},
     error::DurakError,
 };
 
