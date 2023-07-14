@@ -126,7 +126,7 @@ impl Scene for GamePlay {
         gui.update(ctx);
         if pop_card {
             if let Some(card) = self.state.deck.as_mut().unwrap().pop() {
-                self.state.players[0].hand.insert(card);
+                self.state.players[0].insert_card(card);
             }
         }
         if next {
@@ -143,10 +143,7 @@ impl Scene for GamePlay {
             let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
 
             player.hand.draw(&mut canvas);
-            canvas.draw(
-                &circle,
-                DrawParam::new().dest(player.hand.get_pos().unwrap_or_default()),
-            );
+            canvas.draw(&circle, DrawParam::new().dest(player.hand.get_pos()));
         }
 
         if let Some(deck) = &self.state.deck {
@@ -168,16 +165,6 @@ impl Scene for GamePlay {
         let mut deck = Deck::new(&image)?;
         deck.shuffle();
 
-        for _ in 0..7 {
-            for player in &mut state.players {
-                let mut card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
-                if player.human {
-                    card.flip();
-                }
-                player.hand.insert(card);
-            }
-        }
-
         let rotation_step = (360. / state.players.len() as f32).to_radians();
 
         for (i, player) in state.players.iter_mut().enumerate() {
@@ -190,6 +177,13 @@ impl Scene for GamePlay {
 
             player.hand.set_pos(pos);
             player.hand.set_rotation(rotation);
+        }
+
+        for _ in 0..7 {
+            for player in &mut state.players {
+                let mut card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
+                player.insert_card(card);
+            }
         }
 
         state.deck = Some(deck);

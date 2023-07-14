@@ -1,4 +1,4 @@
-use crate::hand::Hand;
+use crate::{hand::Hand, card::Card};
 
 #[derive(Debug, Default)]
 pub struct Player {
@@ -14,5 +14,15 @@ impl Player {
             hand: Hand::new(),
             human,
         }
+    }
+
+    pub fn insert_card(&mut self, mut card: Card) {
+        if self.human {
+            card.flip(true)
+        } else {
+            card.flip(false)
+        }
+        self.hand.insert(card);
+
     }
 }

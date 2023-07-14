@@ -1,10 +1,14 @@
-use std::hash::Hash;
+use std::{
+    hash::Hash,
+    ops::{Index, IndexMut},
+    slice::{Iter, IterMut, SliceIndex},
+    vec::IntoIter,
+};
 
 use ggez::{
-    glam::Vec2,
+    glam::{vec2, Vec2},
     graphics::{Canvas, DrawParam, Image, Rect, Transform},
 };
-use indexmap::{set::Iter, IndexSet};
 
 use crate::sprite::Sprite;
 
@@ -37,8 +41,16 @@ impl Card {
         }
     }
 
-    pub fn flip(&mut self) {
-        self.show_front = !self.show_front;
+    pub fn flip(&mut self, show_face: bool) {
+        self.show_front = show_face;
+    }
+
+    pub fn set_pos(&mut self, pos: Vec2) {
+        self.position = pos;
+    }
+
+    pub fn set_rotation(&mut self, rotation: f32) {
+        self.rotation = rotation;
     }
 
     pub fn suit(&self) -> Suit {
@@ -49,14 +61,13 @@ impl Card {
         self.rank
     }
 
-    pub fn draw(&self, canvas: &mut Canvas, param: impl Into<DrawParam>) {
+    pub fn draw(&self, canvas: &mut Canvas) {
         let mut card_dest = self.position;
         let mut card_rotation = self.rotation;
-        if let Transform::Values { dest, rotation, .. } = Into::<DrawParam>::into(param).transform {
-            card_dest += Into::<Vec2>::into(dest);
-            card_rotation += rotation;
-        }
-        let card_param = DrawParam::new().dest(card_dest).rotation(card_rotation);
+        let card_param = DrawParam::new()
+            .dest(card_dest)
+            .rotation(card_rotation)
+            .offset(vec2(0.5, 1.));
         if self.show_front {
             self.draw_front(canvas, card_param)
         } else {
@@ -121,18 +132,18 @@ pub enum Rank {
 }
 
 #[derive(Debug, Default)]
-pub struct Cards(IndexSet<Card>);
+pub struct Cards(Vec<Card>);
 impl Cards {
     pub fn new() -> Self {
-        Cards(IndexSet::new())
+        Cards(Vec::new())
     }
 
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn insert(&mut self, value: Card) -> bool {
-        self.0.insert(value)
+    pub fn insert(&mut self, value: Card) {
+        self.0.push(value)
     }
 
     pub fn pop(&mut self) -> Option<Card> {
@@ -140,32 +151,66 @@ impl Cards {
     }
 
     pub fn take(&mut self, value: &Card) -> Option<Card> {
-        self.0.shift_take(value)
+        if let Some(i) =
+            self.0.iter().enumerate().find_map(
+                |(i, card)| {
+                    if card == value {
+                        Some(i)
+                    } else {
+                        None
+                    }
+                },
+            )
+        {
+            Some(self.0.remove(i))
+        } else {
+            None
+        }
     }
 
-    pub fn get_index(&mut self, index: usize) -> Option<&Card> {
-        self.0.get_index(index)
+    pub fn get(&self, index: usize) -> Option<&Card> {
+        self.0.get(index)
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut Card> {
+        self.0.get_mut(index)
     }
 
     pub fn swap(&mut self, a: usize, b: usize) {
-        self.0.swap_indices(a, b)
+        self.0.swap(a, b)
     }
 
     pub fn iter(&self) -> Iter<'_, Card> {
         self.0.iter()
     }
 
-    pub fn flip_index(&mut self, index: usize) {
-        if let Some(mut card) = self.0.swap_remove_index(index) {
-            card.flip();
-            let (end_idx, _) = self.0.insert_full(card);
-            self.0.swap_indices(index, end_idx);
-        }
+    pub fn iter_mut(&mut self) -> IterMut<'_, Card> {
+        self.0.iter_mut()
     }
 }
 
-impl From<IndexSet<Card>> for Cards {
-    fn from(value: IndexSet<Card>) -> Self {
+impl<Idx> Index<Idx> for Cards
+where
+    Idx: SliceIndex<[Card]>,
+{
+    type Output = Idx::Output;
+
+    fn index(&self, index: Idx) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+impl<Idx> IndexMut<Idx> for Cards
+where
+    Idx: SliceIndex<[Card]>,
+{
+    fn index_mut(&mut self, index: Idx) -> &mut Self::Output {
+        &mut self.0[index]
+    }
+}
+
+impl From<Vec<Card>> for Cards {
+    fn from(value: Vec<Card>) -> Self {
         Cards(value)
     }
 }
@@ -184,10 +229,20 @@ impl FromIterator<Card> for Cards {
 impl IntoIterator for Cards {
     type Item = Card;
 
-    type IntoIter = indexmap::set::IntoIter<Self::Item>;
+    type IntoIter = IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Cards {
+    type Item = &'a Card;
+
+    type IntoIter = Iter<'a, Card>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
     }
 }
 

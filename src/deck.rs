@@ -16,9 +16,8 @@ pub struct Deck {
 
 impl Deck {
     pub fn new(image: &Image) -> Result<Self, DurakError> {
-        let mut cards = CardFactory::new(image.clone()).get_deck();
-
-        let kozyr = cards.get_index(0).unwrap().suit();
+        let cards = CardFactory::new(image.clone()).get_deck();
+        let kozyr = cards.get(0).unwrap().suit();
 
         Ok(Deck { kozyr, cards })
     }
@@ -37,28 +36,29 @@ impl Deck {
             let r = i + thread_rng().gen_range(0..(len - i));
             self.cards.swap(i, r);
         }
-        self.cards.flip_index(0);
+        self.cards[0].flip(true);
+
+        let pos = vec2(CARD_HEIGHT, CARD_WIDTH / 2.);
+        let rotation = 270.0_f32.to_radians();
+
+        let mut cards_iter = self.cards.iter_mut();
+        let first_card = cards_iter.next().unwrap();
+
+        first_card.set_pos(pos);
+        first_card.set_rotation(rotation);
+
+        for (i, card) in cards_iter.enumerate() {
+            card.set_pos(vec2(
+                (CARD_WIDTH * 7. / 8.) + (2. * i as f32),
+                CARD_HEIGHT,
+            ))
+        }
     }
 }
 impl Drawable for Deck {
-    fn draw(&self, canvas: &mut ggez::graphics::Canvas, param: impl Into<DrawParam>) {
-        let param: DrawParam = param.into();
-        if let Transform::Values { dest, .. } = param.transform {
-            let dest: Vec2 = dest.into();
-            let mut cards_iter = self.cards.iter();
-            if let Some(first_card) = cards_iter.next() {
-                first_card.draw(
-                    canvas,
-                    param
-                        .dest(dest + vec2(CARD_HEIGHT, 0.))
-                        .rotation(90.0_f32.to_radians())
-                )
-            };
-            let dest = dest + vec2(CARD_HEIGHT - CARD_WIDTH, 0.);
-            for (i, card) in cards_iter.enumerate() {
-                let dest = dest + vec2(2. * i as f32, 0.);
-                card.draw(canvas, param.dest(dest))
-            }
+    fn draw(&self, canvas: &mut ggez::graphics::Canvas, _param: impl Into<DrawParam>) {
+        for card in &self.cards {
+            card.draw(canvas)
         }
     }
 

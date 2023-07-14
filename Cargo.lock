@@ -664,7 +664,6 @@ version = "0.1.0"
 dependencies = [
  "ggegui",
  "ggez",
- "indexmap 2.0.0",
  "rand",
 ]
 
