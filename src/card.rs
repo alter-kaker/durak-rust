@@ -7,7 +7,7 @@ use std::{
 
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::{Canvas, DrawParam, Image, Rect, Transform},
+    graphics::{Canvas, DrawParam, Image, Rect},
 };
 
 use crate::sprite::Sprite;
@@ -62,11 +62,9 @@ impl Card {
     }
 
     pub fn draw(&self, canvas: &mut Canvas) {
-        let mut card_dest = self.position;
-        let mut card_rotation = self.rotation;
         let card_param = DrawParam::new()
-            .dest(card_dest)
-            .rotation(card_rotation)
+            .dest(self.position)
+            .rotation(self.rotation)
             .offset(vec2(0.5, 1.));
         if self.show_front {
             self.draw_front(canvas, card_param)

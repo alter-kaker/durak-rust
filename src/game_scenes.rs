@@ -181,7 +181,7 @@ impl Scene for GamePlay {
 
         for _ in 0..7 {
             for player in &mut state.players {
-                let mut card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
+                let card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
                 player.insert_card(card);
             }
         }

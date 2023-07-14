@@ -1,6 +1,6 @@
 use ggez::{
-    glam::{vec2, Vec2},
-    graphics::{DrawParam, Drawable, Image, Rect, Transform},
+    glam::vec2,
+    graphics::{DrawParam, Drawable, Image, Rect},
 };
 use rand::{thread_rng, Rng};
 
@@ -48,10 +48,7 @@ impl Deck {
         first_card.set_rotation(rotation);
 
         for (i, card) in cards_iter.enumerate() {
-            card.set_pos(vec2(
-                (CARD_WIDTH * 7. / 8.) + (2. * i as f32),
-                CARD_HEIGHT,
-            ))
+            card.set_pos(vec2((CARD_WIDTH * 7. / 8.) + (2. * i as f32), CARD_HEIGHT))
         }
     }
 }

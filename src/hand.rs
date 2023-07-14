@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::{Canvas, DrawParam},
+    graphics::{Canvas},
 };
 
 use crate::card::{Card, Cards, CARD_HEIGHT, CARD_WIDTH};
@@ -73,7 +73,6 @@ impl Hand {
     fn set_card_params(&mut self) {
         let pos = self.pos;
         let rotation = self.rotation;
-        let param = DrawParam::new();
 
         let cards_len = self.cards.len() as f32;
 
