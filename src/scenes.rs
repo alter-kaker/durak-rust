@@ -42,6 +42,20 @@ where
             Err(SceneError::SceneMissing.into())
         }
     }
+    pub fn mouse_button_down_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), E> {
+        if let Some(scene) = self.scene.as_mut() {
+            scene.mouse_button_down_event(x, y, ctx)
+        } else {
+            Err(SceneError::SceneMissing.into())
+        }
+    }
+    pub fn mouse_button_up_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), E> {
+        if let Some(scene) = self.scene.as_mut() {
+            scene.mouse_button_up_event(x, y, ctx)
+        } else {
+            Err(SceneError::SceneMissing.into())
+        }
+    }
 }
 
 pub trait Scene {
@@ -54,6 +68,12 @@ pub trait Scene {
     ) -> SceneResult<Self>;
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), Self::Error>;
     fn mouse_motion_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), Self::Error> {
+        Ok(())
+    }
+    fn mouse_button_down_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), Self::Error> {
+        Ok(())
+    }
+    fn mouse_button_up_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), Self::Error> {
         Ok(())
     }
     fn new(state: Self::State, ctx: &Context) -> Result<Self, Self::Error>

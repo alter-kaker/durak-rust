@@ -1,6 +1,7 @@
 use ggez::{
     glam::vec2,
-    graphics::{DrawParam, Drawable, Image, Rect},
+    graphics::{DrawParam, Image},
+    Context,
 };
 use rand::{thread_rng, Rng};
 
@@ -52,23 +53,16 @@ impl Deck {
             card.set_pos(vec2((CARD_WIDTH * 7. / 8.) + (2. * i as f32), CARD_HEIGHT))
         }
     }
-}
-impl Drawable for Deck {
-    fn draw(&self, canvas: &mut ggez::graphics::Canvas, _param: impl Into<DrawParam>) {
-        for card in &self.cards {
-            card.draw(canvas)
-        }
-    }
-
-    fn dimensions(
+    pub fn draw(
         &self,
-        _gfx: &impl ggez::context::Has<ggez::graphics::GraphicsContext>,
-    ) -> Option<Rect> {
-        Some(Rect {
-            x: 0.,
-            y: 0.,
-            w: (self.cards.len() as f32 * 15.) * CARD_WIDTH,
-            h: CARD_HEIGHT,
-        })
+        canvas: &mut ggez::graphics::Canvas,
+        _param: impl Into<DrawParam>,
+        ctx: &mut Context,
+    ) -> Result<(), DurakError> {
+        for card in &self.cards {
+            card.draw(canvas, ctx)?;
+        }
+
+        Ok(())
     }
 }

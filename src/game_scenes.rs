@@ -129,6 +129,11 @@ impl Scene for GamePlay {
                 self.state.players[0].insert_card(card);
             }
         }
+
+        for player in &mut self.state.players {
+            player.hand.update_hover(ctx.mouse.position().into())
+        }
+
         if next {
             self.state.times_played += 1;
             let result = <Self as SceneTransition<GameOver, DurakState>>::transition(*self, ctx)?;
@@ -142,12 +147,12 @@ impl Scene for GamePlay {
         for player in self.state.players.iter() {
             let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
 
-            player.hand.draw(&mut canvas);
+            player.hand.draw(&mut canvas, ctx);
             canvas.draw(&circle, DrawParam::new().dest(player.hand.get_pos()));
         }
 
         if let Some(deck) = &self.state.deck {
-            canvas.draw(deck, DrawParam::new());
+            deck.draw(&mut canvas, DrawParam::new(), ctx)?;
         }
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
@@ -156,6 +161,19 @@ impl Scene for GamePlay {
     }
 
     fn mouse_motion_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), DurakError> {
+        Ok(())
+    }
+
+    fn mouse_button_down_event(
+        &mut self,
+        x: f32,
+        y: f32,
+        _ctx: &Context,
+    ) -> Result<(), Self::Error> {
+        println!("mouse down:");
+        if let Some(card) = self.state.players[0].hand.hover(vec2(x, y)) {
+            println!("{:?}", card)
+        }
         Ok(())
     }
 

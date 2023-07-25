@@ -62,6 +62,10 @@ impl Cards {
     pub fn iter_mut(&mut self) -> IterMut<'_, Card> {
         self.0.iter_mut()
     }
+
+    pub fn append(&mut self, cards: &mut Cards) {
+        self.0.append(&mut cards.0)
+    }
 }
 
 impl<Idx> Index<Idx> for Cards

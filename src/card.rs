@@ -2,10 +2,11 @@ use std::hash::Hash;
 
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::{Canvas, DrawParam, Image, Rect},
+    graphics::{Canvas, Color, DrawMode, DrawParam, Image, Mesh, Rect},
+    Context,
 };
 
-use crate::{cards::Cards, sprite::Sprite};
+use crate::{cards::Cards, error::DurakError, sprite::Sprite};
 
 pub const CARD_WIDTH: f32 = 71.;
 pub const CARD_HEIGHT: f32 = 96.;
@@ -20,6 +21,7 @@ pub struct Card {
     position: Vec2,
     rotation: f32,
     show_front: bool,
+    pub hovered: bool,
 }
 
 impl Card {
@@ -33,7 +35,19 @@ impl Card {
             position: Vec2::ZERO,
             rotation: 0.,
             show_front: false,
+            hovered: false,
         }
+    }
+
+    pub fn intersect(&self, pos: Vec2) -> bool {
+        let [a, b, c, _d] = self.corners();
+
+        let ab = b - a;
+        let am = pos - a;
+        let bc = c - b;
+        let bm = pos - b;
+
+        ab.dot(ab) >= ab.dot(am) && ab.dot(am) >= 0. && bc.dot(bc) >= bc.dot(bm) && bc.dot(bm) >= 0.
     }
 
     pub fn flip(&mut self, show_face: bool) {
@@ -56,24 +70,44 @@ impl Card {
         self.rank
     }
 
-    pub fn draw(&self, canvas: &mut Canvas) {
+    pub fn corners(&self) -> [Vec2; 4] {
+        let rotation_vec = Vec2::from_angle(self.rotation);
+
+        let a = self.position - rotation_vec.rotate(vec2(CARD_WIDTH / 2., 0.));
+        let b = a - rotation_vec.rotate(vec2(0., CARD_HEIGHT));
+        let c = b + rotation_vec.rotate(vec2(CARD_WIDTH, 0.));
+        let d = self.position + rotation_vec.rotate(vec2(CARD_WIDTH / 2., 0.));
+
+        [a, b, c, d]
+    }
+
+    pub fn draw(&self, canvas: &mut Canvas, ctx: &mut Context) -> Result<(), DurakError> {
         let card_param = DrawParam::new()
             .dest(self.position)
             .rotation(self.rotation)
             .offset(vec2(0.5, 1.));
         if self.show_front {
-            self.draw_front(canvas, card_param)
+            canvas.draw(&self.front, card_param)
         } else {
-            self.draw_back(canvas, card_param)
+            canvas.draw(&self.back, card_param)
         }
-    }
 
-    fn draw_front(&self, canvas: &mut Canvas, param: DrawParam) {
-        canvas.draw(&self.front, param)
-    }
-
-    fn draw_back(&self, canvas: &mut Canvas, param: DrawParam) {
-        canvas.draw(&self.back, param)
+        if self.hovered {
+            let corners = self.corners();
+            let outline = Mesh::new_polygon(
+                ctx,
+                DrawMode::stroke(2.),
+                &corners,
+                Color {
+                    r: 1.,
+                    g: 1.,
+                    b: 0.,
+                    a: 0.5,
+                },
+            )?;
+            canvas.draw(&outline, DrawParam::new());
+        }
+        Ok(())
     }
 }
 

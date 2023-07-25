@@ -89,4 +89,22 @@ where
     ) -> Result<(), E> {
         self.scene.mouse_motion_event(x, y, ctx)
     }
+    fn mouse_button_down_event(
+            &mut self,
+            ctx: &mut Context,
+            _button: ggez::event::MouseButton,
+            x: f32,
+            y: f32,
+        ) -> Result<(), E> {
+        self.scene.mouse_button_down_event(x, y, ctx)
+    }
+    fn mouse_button_up_event(
+            &mut self,
+            ctx: &mut Context,
+            _button: ggez::event::MouseButton,
+            x: f32,
+            y: f32,
+        ) -> Result<(), E> {
+        self.scene.mouse_button_up_event(x, y, ctx)
+    }
 }

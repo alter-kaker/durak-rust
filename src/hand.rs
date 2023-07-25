@@ -3,12 +3,10 @@ use std::f32::consts::PI;
 use ggez::{
     glam::{vec2, Vec2},
     graphics::Canvas,
+    Context,
 };
 
-use crate::{
-    card::{Card, CARD_HEIGHT, CARD_WIDTH},
-    cards::Cards,
-};
+use crate::{card::Card, cards::Cards, error::DurakError};
 
 #[derive(Debug, Default)]
 pub struct Hand {
@@ -39,15 +37,9 @@ impl Hand {
     }
 
     pub fn hover(&self, mouse_pos: Vec2) -> Option<&Card> {
-        let pos = self.pos;
         let mut hovered_card = None;
-        for (i, card) in self.cards.iter().enumerate().rev() {
-            let card_x = pos.x + (i as f32 * 15.);
-            let hovered = mouse_pos.x > card_x
-                && mouse_pos.x < card_x + CARD_WIDTH
-                && mouse_pos.y > pos.y
-                && mouse_pos.y < pos.y + CARD_HEIGHT;
-            if hovered {
+        for card in self.cards.iter().rev() {
+            if card.intersect(mouse_pos) {
                 hovered_card = Some(card);
                 break;
             }
@@ -66,6 +58,16 @@ impl Hand {
             Some(card)
         } else {
             None
+        }
+    }
+
+    pub fn update_hover(&mut self, mouse_pos: Vec2) {
+        for card in self.cards.iter_mut() {
+            card.hovered = false;
+        }
+
+        if let Some(card) = self.cards.iter_mut().rev().find(|c| c.intersect(mouse_pos)) {
+            card.hovered = true
         }
     }
 
@@ -96,9 +98,11 @@ impl Hand {
         }
     }
 
-    pub fn draw(&self, canvas: &mut Canvas) {
+    pub fn draw(&self, canvas: &mut Canvas, ctx: &mut Context) -> Result<(), DurakError> {
         for card in &self.cards {
-            card.draw(canvas)
+            card.draw(canvas, ctx)?;
         }
+
+        Ok(())
     }
 }
