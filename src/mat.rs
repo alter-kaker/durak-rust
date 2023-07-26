@@ -66,7 +66,7 @@ impl Mat {
             .flat_map(<&Stack as Into<Vec<&Card>>>::into)
             .collect::<Vec<&Card>>()
         {
-            card.draw(canvas, ctx)?;
+            card.draw(canvas)?;
         }
 
         Ok(())

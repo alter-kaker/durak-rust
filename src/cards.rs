@@ -4,6 +4,8 @@ use std::{
     vec::IntoIter,
 };
 
+
+
 use crate::card::Card;
 
 #[derive(Debug, Default)]
@@ -17,7 +19,11 @@ impl Cards {
         self.0.len()
     }
 
-    pub fn insert(&mut self, value: Card) {
+    pub fn insert(&mut self, value: Card, idx: usize) {
+        self.0.insert(idx, value)
+    }
+
+    pub fn push(&mut self, value: Card) {
         self.0.push(value)
     }
 
@@ -25,19 +31,9 @@ impl Cards {
         self.0.pop()
     }
 
-    pub fn take(&mut self, value: &Card) -> Option<Card> {
-        if let Some(i) =
-            self.0.iter().enumerate().find_map(
-                |(i, card)| {
-                    if card == value {
-                        Some(i)
-                    } else {
-                        None
-                    }
-                },
-            )
-        {
-            Some(self.0.remove(i))
+    pub fn take(&mut self, idx: usize) -> Option<Card> {
+        if idx < self.0.len() {
+            Some(self.0.remove(idx))
         } else {
             None
         }
@@ -98,7 +94,7 @@ impl FromIterator<Card> for Cards {
     fn from_iter<T: IntoIterator<Item = Card>>(iter: T) -> Self {
         let mut cards = Cards::new();
         for card in iter {
-            cards.insert(card);
+            cards.push(card);
         }
 
         cards

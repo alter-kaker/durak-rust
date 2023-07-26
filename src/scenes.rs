@@ -3,7 +3,10 @@ use std::fmt::Debug;
 use ggegui::Gui;
 use ggez::Context;
 
-pub type SceneResult<S> = Result<Box<dyn Scene<State = <S as Scene>::State, Error = <S as Scene>::Error>>, <S as Scene>::Error>;
+pub type SceneResult<S> = Result<
+    Box<dyn Scene<State = <S as Scene>::State, Error = <S as Scene>::Error>>,
+    <S as Scene>::Error,
+>;
 
 pub struct SceneWrapper<S, E>
 where
@@ -35,9 +38,16 @@ where
             Err(SceneError::SceneMissing.into())
         }
     }
-    pub fn mouse_motion_event(&mut self, x: f32, y: f32, ctx: &Context) -> Result<(), E> {
+    pub fn mouse_motion_event(
+        &mut self,
+        x: f32,
+        y: f32,
+        dx: f32,
+        dy: f32,
+        ctx: &Context,
+    ) -> Result<(), E> {
         if let Some(scene) = self.scene.as_mut() {
-            scene.mouse_motion_event(x, y, ctx)
+            scene.mouse_motion_event(x, y, dx, dy, ctx)
         } else {
             Err(SceneError::SceneMissing.into())
         }
@@ -61,19 +71,32 @@ where
 pub trait Scene {
     type State;
     type Error;
-    fn update(
-        self: Box<Self>,
-        gui: &mut Gui,
-        _ctx: &mut Context,
-    ) -> SceneResult<Self>;
+    fn update(self: Box<Self>, gui: &mut Gui, _ctx: &mut Context) -> SceneResult<Self>;
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), Self::Error>;
-    fn mouse_motion_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), Self::Error> {
+    fn mouse_motion_event(
+        &mut self,
+        _x: f32,
+        _y: f32,
+        _dx: f32,
+        _dy: f32,
+        _ctx: &Context,
+    ) -> Result<(), Self::Error> {
         Ok(())
     }
-    fn mouse_button_down_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), Self::Error> {
+    fn mouse_button_down_event(
+        &mut self,
+        _x: f32,
+        _y: f32,
+        _ctx: &Context,
+    ) -> Result<(), Self::Error> {
         Ok(())
     }
-    fn mouse_button_up_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), Self::Error> {
+    fn mouse_button_up_event(
+        &mut self,
+        _x: f32,
+        _y: f32,
+        _ctx: &Context,
+    ) -> Result<(), Self::Error> {
         Ok(())
     }
     fn new(state: Self::State, ctx: &Context) -> Result<Self, Self::Error>

@@ -126,12 +126,14 @@ impl Scene for GamePlay {
         gui.update(ctx);
         if pop_card {
             if let Some(card) = self.state.deck.as_mut().unwrap().pop() {
-                self.state.players[0].insert_card(card);
+                self.state.players[0].push_card(card);
             }
         }
 
-        for player in &mut self.state.players {
-            player.hand.update_hover(ctx.mouse.position().into())
+        if self.state.held_card.is_none() {
+            self.state.players[0]
+                .hand
+                .update_hover(ctx.mouse.position().into());
         }
 
         if next {
@@ -147,12 +149,16 @@ impl Scene for GamePlay {
         for player in self.state.players.iter() {
             let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
 
-            player.hand.draw(&mut canvas, ctx);
+            player.hand.draw(&mut canvas, ctx)?;
             canvas.draw(&circle, DrawParam::new().dest(player.hand.get_pos()));
         }
 
         if let Some(deck) = &self.state.deck {
-            deck.draw(&mut canvas, DrawParam::new(), ctx)?;
+            deck.draw(&mut canvas, DrawParam::new())?;
+        }
+
+        if let Some(card) = &self.state.held_card {
+            card.draw(&mut canvas)?;
         }
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
@@ -160,19 +166,41 @@ impl Scene for GamePlay {
         Ok(())
     }
 
-    fn mouse_motion_event(&mut self, _x: f32, _y: f32, _ctx: &Context) -> Result<(), DurakError> {
+    fn mouse_motion_event(
+        &mut self,
+        _x: f32,
+        _y: f32,
+        dx: f32,
+        dy: f32,
+        _ctx: &Context,
+    ) -> Result<(), DurakError> {
+        let delta = vec2(dx, dy);
+        if let Some(card) = self.state.held_card.as_mut() {
+            card.move_pos(delta)
+        }
         Ok(())
     }
 
     fn mouse_button_down_event(
         &mut self,
-        x: f32,
-        y: f32,
+        _x: f32,
+        _y: f32,
         _ctx: &Context,
     ) -> Result<(), Self::Error> {
-        println!("mouse down:");
-        if let Some(card) = self.state.players[0].hand.hover(vec2(x, y)) {
-            println!("{:?}", card)
+        if self.state.held_card.is_none() {
+            self.state.held_card = self.state.players[0].hand.take_hovered();
+        }
+        Ok(())
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        _x: f32,
+        _y: f32,
+        _ctx: &Context,
+    ) -> Result<(), Self::Error> {
+        if let Some(card) = self.state.held_card.take() {
+            self.state.players[0].hand.put_back(card)
         }
         Ok(())
     }
@@ -200,7 +228,7 @@ impl Scene for GamePlay {
         for _ in 0..7 {
             for player in &mut state.players {
                 let card = deck.pop().ok_or(DurakError::from("Insufficient Cards"))?;
-                player.insert_card(card);
+                player.push_card(card);
             }
         }
 

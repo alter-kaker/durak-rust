@@ -1,7 +1,6 @@
 use ggez::{
     glam::vec2,
     graphics::{DrawParam, Image},
-    Context,
 };
 use rand::{thread_rng, Rng};
 
@@ -57,10 +56,9 @@ impl Deck {
         &self,
         canvas: &mut ggez::graphics::Canvas,
         _param: impl Into<DrawParam>,
-        ctx: &mut Context,
     ) -> Result<(), DurakError> {
         for card in &self.cards {
-            card.draw(canvas, ctx)?;
+            card.draw(canvas)?;
         }
 
         Ok(())

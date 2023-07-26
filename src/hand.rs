@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::Canvas,
+    graphics::{Canvas, Color, DrawMode, DrawParam, Mesh},
     Context,
 };
 
@@ -13,6 +13,7 @@ pub struct Hand {
     cards: Cards,
     pos: Vec2,
     rotation: f32,
+    hovered: Option<usize>,
 }
 
 impl Hand {
@@ -21,6 +22,7 @@ impl Hand {
             cards: Cards::new(),
             pos: Vec2::ZERO,
             rotation: 0.,
+            hovered: None,
         }
     }
 
@@ -36,24 +38,35 @@ impl Hand {
         self.rotation = rotation
     }
 
-    pub fn hover(&self, mouse_pos: Vec2) -> Option<&Card> {
-        let mut hovered_card = None;
-        for card in self.cards.iter().rev() {
-            if card.intersect(mouse_pos) {
-                hovered_card = Some(card);
-                break;
-            }
+    pub fn take_hovered(&mut self) -> Option<Card> {
+        if let Some(idx) = self.hovered {
+            self.cards.take(idx)
+        } else {
+            None
         }
-        hovered_card
     }
 
-    pub fn insert(&mut self, card: Card) {
-        self.cards.insert(card);
+    pub fn insert(&mut self, card: Card, idx: usize) {
+        self.cards.insert(card, idx);
         self.set_card_params();
     }
 
-    pub fn take(&mut self, card: &Card) -> Option<Card> {
-        if let Some(card) = self.cards.take(card) {
+    pub fn push(&mut self, card: Card) {
+        self.cards.push(card);
+        self.set_card_params();
+    }
+
+    pub fn put_back(&mut self, card: Card) {
+        if let Some(idx) = self.hovered {
+            self.cards.insert(card, idx)
+        } else {
+            self.cards.push(card)
+        }
+        self.set_card_params();
+    }
+
+    pub fn take(&mut self, idx: usize) -> Option<Card> {
+        if let Some(card) = self.cards.take(idx) {
             self.set_card_params();
             Some(card)
         } else {
@@ -62,13 +75,17 @@ impl Hand {
     }
 
     pub fn update_hover(&mut self, mouse_pos: Vec2) {
-        for card in self.cards.iter_mut() {
-            card.hovered = false;
-        }
+        self.hovered = self.cards.iter().enumerate().rev().find_map(|(i, card)| {
+            if card.intersect(mouse_pos) {
+                Some(i)
+            } else {
+                None
+            }
+        })
+    }
 
-        if let Some(card) = self.cards.iter_mut().rev().find(|c| c.intersect(mouse_pos)) {
-            card.hovered = true
-        }
+    pub fn remove_hover(&mut self) {
+        self.hovered = None;
     }
 
     pub fn empty(&mut self) {
@@ -99,8 +116,25 @@ impl Hand {
     }
 
     pub fn draw(&self, canvas: &mut Canvas, ctx: &mut Context) -> Result<(), DurakError> {
-        for card in &self.cards {
-            card.draw(canvas, ctx)?;
+        for (i, card) in self.cards.iter().enumerate() {
+            card.draw(canvas)?;
+
+            if let Some(idx) = self.hovered {
+                if i == idx {
+                    let outline = Mesh::new_polygon(
+                        ctx,
+                        DrawMode::stroke(2.),
+                        &card.corners(),
+                        Color {
+                            r: 1.,
+                            g: 1.,
+                            b: 0.,
+                            a: 0.5,
+                        },
+                    )?;
+                    canvas.draw(&outline, DrawParam::new());
+                }
+            }
         }
 
         Ok(())

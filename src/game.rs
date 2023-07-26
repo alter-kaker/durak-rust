@@ -4,6 +4,7 @@ use ggegui::Gui;
 use ggez::{event::EventHandler, graphics::FontData, Context, GameResult};
 
 use crate::{
+    card::Card,
     deck::Deck,
     error::DurakError,
     game_scenes::MainMenu,
@@ -16,6 +17,7 @@ pub struct DurakState {
     pub times_played: u32,
     pub players: Vec<Player>,
     pub deck: Option<Deck>,
+    pub held_card: Option<Card>,
     pub gui: Gui,
 }
 
@@ -36,6 +38,7 @@ impl DurakState {
                 },
             ],
             deck: None,
+            held_card: None,
             gui: Gui::new(ctx),
         })
     }
@@ -84,27 +87,27 @@ where
         ctx: &mut Context,
         x: f32,
         y: f32,
-        _dx: f32,
-        _dy: f32,
+        dx: f32,
+        dy: f32,
     ) -> Result<(), E> {
-        self.scene.mouse_motion_event(x, y, ctx)
+        self.scene.mouse_motion_event(x, y, dx, dy, ctx)
     }
     fn mouse_button_down_event(
-            &mut self,
-            ctx: &mut Context,
-            _button: ggez::event::MouseButton,
-            x: f32,
-            y: f32,
-        ) -> Result<(), E> {
+        &mut self,
+        ctx: &mut Context,
+        _button: ggez::event::MouseButton,
+        x: f32,
+        y: f32,
+    ) -> Result<(), E> {
         self.scene.mouse_button_down_event(x, y, ctx)
     }
     fn mouse_button_up_event(
-            &mut self,
-            ctx: &mut Context,
-            _button: ggez::event::MouseButton,
-            x: f32,
-            y: f32,
-        ) -> Result<(), E> {
+        &mut self,
+        ctx: &mut Context,
+        _button: ggez::event::MouseButton,
+        x: f32,
+        y: f32,
+    ) -> Result<(), E> {
         self.scene.mouse_button_up_event(x, y, ctx)
     }
 }

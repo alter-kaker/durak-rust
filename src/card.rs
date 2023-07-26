@@ -2,8 +2,7 @@ use std::hash::Hash;
 
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::{Canvas, Color, DrawMode, DrawParam, Image, Mesh, Rect},
-    Context,
+    graphics::{Canvas, DrawParam, Image, Rect},
 };
 
 use crate::{cards::Cards, error::DurakError, sprite::Sprite};
@@ -21,7 +20,6 @@ pub struct Card {
     position: Vec2,
     rotation: f32,
     show_front: bool,
-    pub hovered: bool,
 }
 
 impl Card {
@@ -35,7 +33,6 @@ impl Card {
             position: Vec2::ZERO,
             rotation: 0.,
             show_front: false,
-            hovered: false,
         }
     }
 
@@ -56,6 +53,10 @@ impl Card {
 
     pub fn set_pos(&mut self, pos: Vec2) {
         self.position = pos;
+    }
+
+    pub fn move_pos(&mut self, delta: Vec2) {
+        self.position += delta
     }
 
     pub fn set_rotation(&mut self, rotation: f32) {
@@ -81,7 +82,7 @@ impl Card {
         [a, b, c, d]
     }
 
-    pub fn draw(&self, canvas: &mut Canvas, ctx: &mut Context) -> Result<(), DurakError> {
+    pub fn draw(&self, canvas: &mut Canvas) -> Result<(), DurakError> {
         let card_param = DrawParam::new()
             .dest(self.position)
             .rotation(self.rotation)
@@ -90,22 +91,6 @@ impl Card {
             canvas.draw(&self.front, card_param)
         } else {
             canvas.draw(&self.back, card_param)
-        }
-
-        if self.hovered {
-            let corners = self.corners();
-            let outline = Mesh::new_polygon(
-                ctx,
-                DrawMode::stroke(2.),
-                &corners,
-                Color {
-                    r: 1.,
-                    g: 1.,
-                    b: 0.,
-                    a: 0.5,
-                },
-            )?;
-            canvas.draw(&outline, DrawParam::new());
         }
         Ok(())
     }
