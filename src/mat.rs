@@ -23,12 +23,15 @@ impl<'a> From<&'a Stack> for Vec<&'a Card> {
     }
 }
 
+#[derive(Default)]
 pub struct Mat {
     in_play: Vec<Stack>,
-    discard_pile: Vec<Card>,
 }
 
 impl Mat {
+    pub fn new() -> Self {
+        Default::default()
+    }
     pub fn attack(&mut self, card: Card) {
         self.in_play.push(Stack(card, None));
         self.set_card_params();
@@ -37,11 +40,6 @@ impl Mat {
     pub fn defend(&mut self, stack_idx: usize, card: Card) {
         self.in_play[stack_idx].1 = Some(card);
         self.set_card_params();
-    }
-
-    pub fn discard_cards(&mut self) {
-        let mut cards = self.drain();
-        self.discard_pile.append(&mut cards)
     }
 
     pub fn take_cards(&mut self) -> Cards {

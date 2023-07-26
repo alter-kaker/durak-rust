@@ -11,6 +11,7 @@ use crate::{
     error::DurakError,
     game::DurakState,
     hand::Hand,
+    mat::Mat,
     player::Player,
     scenes::{Scene, SceneResult, SceneTransition},
     storage,
@@ -211,6 +212,8 @@ impl Scene for GamePlay {
         let mut deck = Deck::new(&image)?;
         deck.shuffle();
 
+        state.mat = Some(Mat::new());
+
         let rotation_step = (360. / state.players.len() as f32).to_radians();
 
         for (i, player) in state.players.iter_mut().enumerate() {
@@ -281,7 +284,10 @@ impl Scene for GameOver {
         Ok(())
     }
 
-    fn new(state: DurakState, _ctx: &Context) -> Result<GameOver, DurakError> {
+    fn new(mut state: DurakState, _ctx: &Context) -> Result<GameOver, DurakError> {
+        state.deck = None;
+        state.mat = None;
+        state.discard_pile = Vec::new();
         Ok(GameOver { state })
     }
 

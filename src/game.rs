@@ -10,13 +10,15 @@ use crate::{
     game_scenes::MainMenu,
     hand::Hand,
     player::Player,
-    scenes::{Scene, SceneError, SceneWrapper},
+    scenes::{Scene, SceneError, SceneWrapper}, mat::Mat,
 };
 
 pub struct DurakState {
     pub times_played: u32,
     pub players: Vec<Player>,
     pub deck: Option<Deck>,
+    pub mat: Option<Mat>,
+    pub discard_pile: Vec<Card>,
     pub held_card: Option<Card>,
     pub gui: Gui,
 }
@@ -38,6 +40,8 @@ impl DurakState {
                 },
             ],
             deck: None,
+            mat: None,
+            discard_pile: Vec::new(),
             held_card: None,
             gui: Gui::new(ctx),
         })
