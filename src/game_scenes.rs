@@ -1,7 +1,7 @@
 use ggegui::{egui::Area, Gui};
 use ggez::{
     glam::{vec2, Vec2},
-    graphics::{Canvas, Color, DrawMode, DrawParam, Drawable, Mesh},
+    graphics::{Canvas, Color, DrawMode, DrawParam, Drawable, Mesh, Rect},
     winit::dpi::PhysicalSize,
     Context,
 };
@@ -137,6 +137,10 @@ impl Scene for GamePlay {
             }
         }
 
+        if let Some(mat) = self.state.mat.as_mut() {
+            mat.update_intersect(ctx.mouse.position().into())
+        }
+
         if self.state.held_card.is_none() {
             self.state.players[0]
                 .hand
@@ -153,6 +157,9 @@ impl Scene for GamePlay {
 
     fn draw(&self, gui: &Gui, ctx: &mut Context) -> Result<(), DurakError> {
         let mut canvas = Canvas::from_frame(ctx, Color::from([0.1, 0.2, 0.3, 1.0]));
+        if let Some(mat) = &self.state.mat {
+            mat.draw(&mut canvas, ctx)?;
+        }
         for player in self.state.players.iter() {
             let circle = Mesh::new_circle(ctx, DrawMode::fill(), Vec2::ZERO, 5., 1., Color::RED)?;
 
@@ -167,6 +174,7 @@ impl Scene for GamePlay {
         if let Some(card) = &self.state.held_card {
             card.draw(&mut canvas)?;
         }
+
         gui.draw(&mut canvas, DrawParam::new());
         canvas.finish(ctx)?;
 
@@ -206,9 +214,16 @@ impl Scene for GamePlay {
         _y: f32,
         _ctx: &Context,
     ) -> Result<(), Self::Error> {
+        if let Some(mat) = self.state.mat.as_mut() {
             if let Some(card) = self.state.held_card.take() {
+                if mat.intersect() {
+                    self.state.players[0].hand.remove_hover();
+                    mat.attack(card)
+                } else {
                     self.state.players[0].hand.put_back(card)
                 }
+            }
+        }
         Ok(())
     }
 
@@ -218,14 +233,19 @@ impl Scene for GamePlay {
         let mut deck = Deck::new(&image)?;
         deck.shuffle();
 
-        state.mat = Some(Mat::new());
+        let PhysicalSize { height, width, .. } = ctx.gfx.window().inner_size();
+        let table_size = (height.min(width) / 2) as f32;
+        state.mat = Some(Mat::new(Rect::new(
+            width as f32 - table_size,
+            0.,
+            table_size,
+            height as f32,
+        )));
 
         let rotation_step = (360. / state.players.len() as f32).to_radians();
 
         for (i, player) in state.players.iter_mut().enumerate() {
             let rotation = rotation_step * i as f32;
-            let PhysicalSize { height, width, .. } = ctx.gfx.window().inner_size();
-            let table_size = (height.min(width) / 2) as f32;
             let radius = vec2(0., table_size * 3. / 4.);
             let center = vec2(table_size, table_size);
             let pos = center + Vec2::from_angle(rotation).rotate(radius);

@@ -86,6 +86,7 @@ impl Hand {
 
     pub fn remove_hover(&mut self) {
         self.hovered = None;
+        self.set_card_params();
     }
 
     pub fn empty(&mut self) {

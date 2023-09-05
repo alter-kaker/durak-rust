@@ -1,4 +1,8 @@
-use ggez::{glam::vec2, graphics::Canvas, Context};
+use ggez::{
+    glam::{vec2, Vec2},
+    graphics::{Canvas, Color, DrawMode, DrawParam, Mesh, Rect},
+    Context,
+};
 
 use crate::{
     card::{Card, CARD_HEIGHT, CARD_WIDTH},
@@ -26,11 +30,16 @@ impl<'a> From<&'a Stack> for Vec<&'a Card> {
 #[derive(Default)]
 pub struct Mat {
     in_play: Vec<Stack>,
+    rect: Rect,
+    intersect: bool,
 }
 
 impl Mat {
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(rect: Rect) -> Self {
+        Mat {
+            rect,
+            ..Default::default()
+        }
     }
     pub fn attack(&mut self, card: Card) {
         self.in_play.push(Stack(card, None));
@@ -46,13 +55,23 @@ impl Mat {
         self.drain().into()
     }
 
+    pub fn update_intersect(&mut self, mouse_pos: Vec2) {
+        self.intersect = self.rect.contains(mouse_pos);
+    }
+
+    pub fn intersect(&self) -> bool {
+        self.intersect
+    }
+
     pub fn set_card_params(&mut self) {
         for (i, stack) in self.in_play.iter_mut().enumerate() {
-            let x = (i % 2) as f32 * (CARD_WIDTH + 10.);
-            let y = (i / 2) as f32 * (CARD_HEIGHT + 20.);
+            let x = (i % 2) as f32 * (CARD_WIDTH + 10.) + self.rect.x;
+            let y = ((i / 2) + 1) as f32 * (CARD_HEIGHT + 20.) + self.rect.y;
             stack.0.set_pos(vec2(x, y));
+            stack.0.set_rotation(0.);
             if let Some(card) = stack.1.as_mut() {
                 card.set_pos(vec2(x, y + 15.));
+                card.set_rotation(0.)
             }
         }
     }
@@ -65,6 +84,20 @@ impl Mat {
             .collect::<Vec<&Card>>()
         {
             card.draw(canvas)?;
+        }
+        if self.intersect {
+            let outline = Mesh::new_rectangle(
+                ctx,
+                DrawMode::stroke(2.),
+                self.rect,
+                Color {
+                    r: 1.,
+                    g: 1.,
+                    b: 0.,
+                    a: 0.5,
+                },
+            )?;
+            canvas.draw(&outline, DrawParam::new());
         }
 
         Ok(())
