@@ -217,8 +217,11 @@ impl Scene for GamePlay {
         if let Some(mat) = self.state.mat.as_mut() {
             if let Some(card) = self.state.held_card.take() {
                 if mat.intersect() {
+                    if let Some(card) = mat.attack(card) {
+                    self.state.players[0].hand.put_back(card)
+
+                    }
                     self.state.players[0].hand.remove_hover();
-                    mat.attack(card)
                 } else {
                     self.state.players[0].hand.put_back(card)
                 }
@@ -235,6 +238,7 @@ impl Scene for GamePlay {
 
         let PhysicalSize { height, width, .. } = ctx.gfx.window().inner_size();
         let table_size = (height.min(width) / 2) as f32;
+        
         state.mat = Some(Mat::new(Rect::new(
             width as f32 - table_size,
             0.,

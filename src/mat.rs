@@ -5,12 +5,23 @@ use ggez::{
 };
 
 use crate::{
-    card::{Card, CARD_HEIGHT, CARD_WIDTH},
+    card::{Card, Rank, CARD_HEIGHT, CARD_WIDTH},
     cards::Cards,
     error::DurakError,
 };
 
 pub struct Stack(Card, Option<Card>);
+
+impl Stack {
+    fn has_rank(&self, rank: Rank) -> bool {
+        self.0.rank() == rank
+            || if let Some(card) = &self.1 {
+                card.rank() == rank
+            } else {
+                false
+            }
+    }
+}
 
 impl From<Stack> for Vec<Card> {
     fn from(value: Stack) -> Self {
@@ -41,9 +52,14 @@ impl Mat {
             ..Default::default()
         }
     }
-    pub fn attack(&mut self, card: Card) {
-        self.in_play.push(Stack(card, None));
-        self.set_card_params();
+    pub fn attack(&mut self, card: Card) -> Option<Card> {
+        if self.in_play.is_empty() || self.in_play.iter().any(|stack| stack.has_rank(card.rank())) {
+            self.in_play.push(Stack(card, None));
+            self.set_card_params();
+            None
+        } else {
+            Some(card)
+        }
     }
 
     pub fn defend(&mut self, stack_idx: usize, card: Card) {
