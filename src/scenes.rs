@@ -102,12 +102,6 @@ pub trait Scene {
     fn new(state: Self::State, ctx: &Context) -> Result<Self, Self::Error>
     where
         Self: Sized;
-    fn new_boxed(state: Self::State, ctx: &Context) -> Result<Box<Self>, Self::Error>
-    where
-        Self: Sized,
-    {
-        Ok(Box::new(Self::new(state, ctx)?))
-    }
 
     fn take_state(self) -> Self::State
     where
@@ -124,7 +118,7 @@ where
     Self: Scene<State = S> + Sized,
     U: Scene<State = S>,
 {
-    fn transition(self, ctx: &Context) -> Result<U, U::Error> {
+    fn transition(self: Box<Self>, ctx: &Context) -> Result<U, U::Error> {
         U::new(self.take_state(), ctx)
     }
 }

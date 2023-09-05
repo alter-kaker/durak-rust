@@ -20,6 +20,9 @@ use crate::{
 pub trait DurakSceneTransition<U: Scene<State = DurakState, Error = DurakError>>:
     SceneTransition<U, DurakState>
 {
+    fn transition(self: Box<Self>, ctx: &Context) -> Result<U, <U as Scene>::Error> {
+        <Self as SceneTransition<U, DurakState>>::transition(self, ctx)
+    }
 }
 impl<S, U> SceneTransition<U, DurakState> for S
 where
@@ -27,6 +30,11 @@ where
     U: Scene<State = DurakState, Error = DurakError>,
 {
 }
+
+impl DurakSceneTransition<GamePlay> for MainMenu {}
+impl DurakSceneTransition<GameOver> for GamePlay {}
+impl DurakSceneTransition<MainMenu> for GamePlay {}
+impl DurakSceneTransition<MainMenu> for GameOver {}
 
 pub struct MainMenu {
     state: DurakState,
@@ -73,7 +81,7 @@ impl Scene for MainMenu {
                 .any(|player| player.name.is_empty())
         {
             self.state.players.truncate(self.no_of_players);
-            let result = self.transition(ctx)?;
+            let result = <Self as DurakSceneTransition<GamePlay>>::transition(self, ctx)?;
             return Ok(Box::new(result));
         }
 
@@ -107,8 +115,6 @@ impl Scene for MainMenu {
     }
 }
 
-impl DurakSceneTransition<GamePlay> for MainMenu {}
-
 pub struct GamePlay {
     state: DurakState,
 }
@@ -139,7 +145,7 @@ impl Scene for GamePlay {
 
         if next {
             self.state.times_played += 1;
-            let result = <Self as SceneTransition<GameOver, DurakState>>::transition(*self, ctx)?;
+            let result = <Self as DurakSceneTransition<GameOver>>::transition(self, ctx)?;
             return Ok(Box::new(result));
         }
         Ok(self)
@@ -200,9 +206,9 @@ impl Scene for GamePlay {
         _y: f32,
         _ctx: &Context,
     ) -> Result<(), Self::Error> {
-        if let Some(card) = self.state.held_card.take() {
-            self.state.players[0].hand.put_back(card)
-        }
+            if let Some(card) = self.state.held_card.take() {
+                    self.state.players[0].hand.put_back(card)
+                }
         Ok(())
     }
 
@@ -247,8 +253,6 @@ impl Scene for GamePlay {
         self.state
     }
 }
-impl SceneTransition<GameOver, DurakState> for GamePlay {}
-impl SceneTransition<MainMenu, DurakState> for GamePlay {}
 
 pub struct GameOver {
     state: DurakState,
@@ -268,7 +272,7 @@ impl Scene for GameOver {
             .inner;
         gui.update(ctx);
         if next {
-            let result = self.transition(ctx)?;
+            let result = <Self as DurakSceneTransition<MainMenu>>::transition(self, ctx)?;
             return Ok(Box::new(result));
         }
 
@@ -298,5 +302,3 @@ impl Scene for GameOver {
         self.state
     }
 }
-
-impl SceneTransition<MainMenu, DurakState> for GameOver {}
